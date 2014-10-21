@@ -1,5 +1,7 @@
 (package-initialize)
 
+(global-set-key "\C-cl" 'goto-line)
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
