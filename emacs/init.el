@@ -15,6 +15,7 @@
  '(indent-tabs-mode nil)
  '(inhibit-default-init nil)
  '(inhibit-startup-screen t)
+ '(make-backup-files nil)
  '(menu-bar-mode nil)
  '(nyan-mode nil)
  '(package-archives
