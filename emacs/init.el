@@ -12,6 +12,7 @@
     ("8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
  '(ido-enable-flex-matching t)
  '(ido-mode (quote both) nil (ido))
+ '(indent-tabs-mode nil)
  '(inhibit-default-init nil)
  '(inhibit-startup-screen t)
  '(menu-bar-mode nil)
@@ -20,6 +21,7 @@
    (quote
     (("gnu" . "http://elpa.gnu.org/packages/")
      ("melpa" . "http://melpa.milkbox.net/packages/"))))
+ '(tab-width 2)
  '(tool-bar-mode nil)
  '(uniquify-buffer-name-style (quote post-forward) nil (uniquify)))
 (custom-set-faces
