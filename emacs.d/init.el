@@ -3,27 +3,44 @@
      
 (global-set-key "\C-cl" 'goto-line)
 
-;; OCaml setup
 
-(defun opam-path (path) 
-  (let ((opam-share-dir 
-         (shell-command-to-string "echo -n `opam config var share`")))
+(defun opam-path (path)
+  (let ((opam-share-dir
+         (shell-command-to-string
+          "echo -n `opam config var share`")))
     (concat opam-share-dir "/" path)))
 
 (add-to-list 'load-path (opam-path "emacs/site-lisp"))
 (add-to-list 'load-path (opam-path "tuareg"))
-(load "tuareg-site-file")
-(require 'merlin)
-(require 'ocp-indent)
-(require 'ocp-index)
 
-; This is broken.
-;; (add-hook 'tuareg-mode-hook
-;;           (lambda ()
-;;             (merlin-mode)
-;;             (local-set-key (kbd "C-c c") 'recompile)
-;;             (local-set-key (kbd "C-c C-c") 'recompile)
-;;             (auto-file-mode)))
+(load "tuareg-site-file")
+
+(require 'ocp-indent)
+(require 'merlin)
+
+(setq merlin-use-auto-complete-mode 'easy)
+(setq tuareg-font-lock-symbols t)
+(setq merlin-command 'opam)
+
+(defun ocp-indent-buffer ()
+  (interactive)
+  (save-excursion
+    (mark-whole-buffer)
+    (ocp-indent-region (region-beginning)
+                       (region-end))))
+
+(add-hook 'tuareg-mode-hook
+          (lambda ()
+            (merlin-mode)
+            (auto-complete-mode 1)
+            (local-set-key (kbd "C-c c") 'recompile)
+            (local-set-key (kbd "C-c C-c") 'recompile)
+            (auto-fill-mode)
+            (add-hook 'before-save-hook 'ocp-indent-buffer nil t)))
+
+(provide 'ocaml)
+
+ (setq opam-share (substring (shell-command-to-string "opam config var share 2> /dev/null") 0 -1))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -119,3 +136,31 @@
 ;; Automatically load utop.el
 (autoload 'utop "utop" "Toplevel for OCaml" t)
 
+
+;; AucTeX
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+(setq TeX-PDF-mode t)
+ 
+;; Use Skim as viewer, enable source <-> PDF sync
+;; make latexmk available via C-c C-c
+;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
+(add-hook 'LaTeX-mode-hook (lambda ()
+  (push
+    '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+      :help "Run latexmk on file")
+    TeX-command-list)))
+(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
+ 
+;; use Skim as default pdf viewer
+;; Skim's displayline is used for forward search (from .tex to .pdf)
+;; option -b highlights the current line; option -g opens Skim in the background  
+(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+(setq TeX-view-program-list
+     '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
