@@ -4,14 +4,16 @@
 (global-set-key "\C-cl" 'goto-line)
 
 
-(defun opam-path (path)
-  (let ((opam-share-dir
-         (shell-command-to-string
-          "echo -n `opam config var share`")))
-    (concat opam-share-dir "/" path)))
+; Dec 15, 2014. No longer use opam packages; they are buggy.
+; Switch to melpa's 
+;(defun opam-path (path)
+;  (let ((opam-share-dir
+;         (shell-command-to-string
+;          "echo -n `opam config var share`")))
+;    (concat opam-share-dir "/" path)))
 
-(add-to-list 'load-path (opam-path "emacs/site-lisp"))
-(add-to-list 'load-path (opam-path "tuareg"))
+;(add-to-list 'load-path (opam-path "emacs/site-lisp"))
+;(add-to-list 'load-path (opam-path "tuareg"))
 
 (load "tuareg-site-file")
 
@@ -19,7 +21,8 @@
 (require 'merlin)
 
 (setq merlin-use-auto-complete-mode 'easy)
-(setq tuareg-font-lock-symbols t)
+; This is too slow currently. It makes fancy lambdas and such.
+;(setq tuareg-font-lock-symbols t)
 (setq merlin-command 'opam)
 
 (defun ocp-indent-buffer ()
@@ -39,6 +42,7 @@
             (add-hook 'before-save-hook 'ocp-indent-buffer nil t)))
 
 (provide 'ocaml)
+
 
 ;; AucTeX
 (setq TeX-auto-save t)
@@ -145,6 +149,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 130 :width normal :foundry "nil" :family "DejaVu Sans Mono")))))
+ '(default ((t (:inherit nil :stipple nil :background "#002b36" :foreground "#839496" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 140 :width normal :foundry "nil" :family "Menlo")))))
 
 
