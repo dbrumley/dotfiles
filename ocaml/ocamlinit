@@ -8,4 +8,9 @@ let () =
 #camlp4o;;
 #require "core.top";;
 #require "core.syntax";;
-open Core.Std
+open Core.Std;;
+(* ## added by OPAM user-setup for ocamltop / base ## d5b43c10ffbc4d9af79fea6e160104af ## you can edit, but keep this line *)
+#use "topfind";;
+#thread;;
+#camlp4o;;
+(* ## end of OPAM user-setup addition for ocamltop / base ## keep this line *)
