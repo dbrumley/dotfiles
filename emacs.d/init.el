@@ -3,75 +3,142 @@
      
 (global-set-key "\C-cl" 'goto-line)
 
+;; OCaml configuration
+;;  - better error and backtrace matching
 
-; Dec 15, 2014. No longer use opam packages; they are buggy.
-; Switch to melpa's 
-;(defun opam-path (path)
-;  (let ((opam-share-dir
-;         (shell-command-to-string
-;          "echo -n `opam config var share`")))
-;    (concat opam-share-dir "/" path)))
+(defun set-ocaml-error-regexp ()
+  (set
+   'compilation-error-regexp-alist
+   (list '("[Ff]ile \\(\"\\(.*?\\)\", line \\(-?[0-9]+\\)\\(, characters \\(-?[0-9]+\\)-\\([0-9]+\\)\\)?\\)\\(:\n\\(\\(Warning .*?\\)\\|\\(Error\\)\\):\\)?"
+    2 3 (5 . 6) (9 . 11) 1 (8 compilation-message-face)))))
 
-;(add-to-list 'load-path (opam-path "emacs/site-lisp"))
-;(add-to-list 'load-path (opam-path "tuareg"))
+(add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
+(add-hook 'ocaml-mode-hook 'set-ocaml-error-regexp)
+;; ## added by OPAM user-setup for emacs / base ## 3b3794f813a9e9acda2ddcfcb5defc94 ## you can edit, but keep this line
+;; Base configuration for OPAM
 
-(load "tuareg-site-file")
+(defun opam-shell-command-to-string (command)
+  "Similar to shell-command-to-string, but returns nil unless the process
+  returned 0 (shell-command-to-string ignores return value)"
+  (let* ((return-value 0)
+         (return-string
+          (with-output-to-string
+            (setq return-value
+                  (with-current-buffer standard-output
+                    (process-file shell-file-name nil t nil
+                                  shell-command-switch command))))))
+    (if (= return-value 0) return-string nil)))
 
-(require 'ocp-indent)
-(require 'merlin)
-
-(setq merlin-use-auto-complete-mode 'easy)
-; This is too slow currently. It makes fancy lambdas and such.
-;(setq tuareg-font-lock-symbols t)
-(setq merlin-command 'opam)
-
-(defun ocp-indent-buffer ()
+(defun opam-update-env ()
+  "Update the environment to follow current OPAM switch configuration"
   (interactive)
-  (save-excursion
-    (mark-whole-buffer)
-    (ocp-indent-region (region-beginning)
-                       (region-end))))
+  (let ((env (opam-shell-command-to-string "opam config env --sexp")))
+    (when env
+      (dolist (var (car (read-from-string env)))
+        (setenv (car var) (cadr var))
+        (when (string= (car var) "PATH")
+          (setq exec-path (split-string (cadr var) path-separator)))))))
 
-(add-hook 'tuareg-mode-hook
-          (lambda ()
-            (merlin-mode)
-            (auto-complete-mode 1)
-            (local-set-key (kbd "C-c c") 'recompile)
-            (local-set-key (kbd "C-c C-c") 'recompile)
-            (auto-fill-mode)
-            (add-hook 'before-save-hook 'ocp-indent-buffer nil t)))
+(opam-update-env)
 
-(provide 'ocaml)
+(setq opam-share
+  (let ((reply (opam-shell-command-to-string "opam config var share")))
+    (when reply (substring reply 0 -1))))
 
+(add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
+;; OPAM-installed tools automated detection and initialisation
 
-;; AucTeX
-(setq TeX-auto-save t)
-(setq TeX-parse-self t)
-(setq-default TeX-master nil)
-(add-hook 'LaTeX-mode-hook 'visual-line-mode)
-(add-hook 'LaTeX-mode-hook 'flyspell-mode)
-(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
-(setq reftex-plug-into-AUCTeX t)
-(setq TeX-PDF-mode t)
- 
-;; Use Skim as viewer, enable source <-> PDF sync
-;; make latexmk available via C-c C-c
-;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
-(add-hook 'LaTeX-mode-hook (lambda ()
-  (push
-    '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
-      :help "Run latexmk on file")
-    TeX-command-list)))
-(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
- 
-;; use Skim as default pdf viewer
-;; Skim's displayline is used for forward search (from .tex to .pdf)
-;; option -b highlights the current line; option -g opens Skim in the background  
-(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-(setq TeX-view-program-list
-     '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+(defun opam-setup-tuareg ()
+  (add-to-list 'load-path (concat opam-share "/tuareg") t)
+  (load "tuareg-site-file"))
 
+(defun opam-setup-ocp-indent ()
+  (require 'ocp-indent))
+
+(defun opam-setup-ocp-index ()
+  (require 'ocp-index))
+
+(defun opam-setup-merlin ()
+  (require 'merlin)
+  (add-hook 'tuareg-mode-hook 'merlin-mode t)
+  (add-hook 'caml-mode-hook 'merlin-mode t)
+  (set-default 'ocp-index-use-auto-complete nil)
+  (set-default 'merlin-use-auto-complete-mode 'easy)
+  ;; So you can do it on a mac, where `C-<up>` and `C-<down>` are used
+  ;; by spaces.
+  (define-key merlin-mode-map
+    (kbd "C-c <up>") 'merlin-type-enclosing-go-up)
+  (define-key merlin-mode-map
+    (kbd "C-c <down>") 'merlin-type-enclosing-go-down)
+  (set-face-background 'merlin-type-face "skyblue"))
+
+(defun opam-setup-utop ()
+  (autoload 'utop "utop" "Toplevel for OCaml" t)
+  (autoload 'utop-setup-ocaml-buffer "utop" "Toplevel for OCaml" t)
+  (add-hook 'tuareg-mode-hook 'utop-setup-ocaml-buffer))
+
+(setq opam-tools
+  '(("tuareg" . opam-setup-tuareg)
+    ("ocp-indent" . opam-setup-ocp-indent)
+    ("ocp-index" . opam-setup-ocp-index)
+    ("merlin" . opam-setup-merlin)
+    ("utop" . opam-setup-utop)))
+
+(defun opam-detect-installed-tools ()
+  (let*
+      ((command "opam list --installed --short --safe --color=never")
+       (names (mapcar 'car opam-tools))
+       (command-string (mapconcat 'identity (cons command names) " "))
+       (reply (opam-shell-command-to-string command-string)))
+    (when reply (split-string reply))))
+
+(setq opam-tools-installed (opam-detect-installed-tools))
+
+(defun opam-auto-tools-setup ()
+  (interactive)
+  (dolist
+      (f (mapcar (lambda (x) (cdr (assoc x opam-tools))) opam-tools-installed))
+    (funcall (symbol-function f))))
+
+(opam-auto-tools-setup)
+
+;; (defun opam-path (path)
+;;   (let ((opam-share-dir
+;;          (shell-command-to-string
+;;           "echo -n `opam config var share`")))
+;;     (concat opam-share-dir "/" path)))
+
+;; (add-to-list 'load-path (opam-path "emacs/site-lisp"))
+;; (add-to-list 'load-path (opam-path "tuareg"))
+
+;; (load "tuareg-site-file")
+
+;; (require 'ocp-indent)
+;; (require 'merlin)
+
+;; (setq merlin-use-auto-complete-mode 'easy)
+;; ;(setq tuareg-font-lock-symbols t)
+;; (setq merlin-command 'opam)
+
+;; (defun ocp-indent-buffer ()
+;;   (interactive)
+;;   (save-excursion
+;;     (mark-whole-buffer)
+;;     (ocp-indent-region (region-beginning)
+;;                        (region-end))))
+
+;; (add-hook 'tuareg-mode-hook
+;;           (lambda ()
+;;             (merlin-mode)
+;;             (auto-complete-mode 1)
+;;             (local-set-key (kbd "C-c c") 'recompile)
+;;             (local-set-key (kbd "C-c C-c") 'recompile)
+;;             (auto-fill-mode)
+;;             (add-hook 'before-save-hook 'ocp-indent-buffer nil t)))
+
+;; (provide 'ocaml)
+
+;;  (setq opam-share (substring (shell-command-to-string "opam config var share 2> /dev/null") 0 -1))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -136,11 +203,13 @@
  '(make-backup-files nil)
  '(markdown-command "pandoc --smart -f markdown -t html")
  '(menu-bar-mode nil)
+ '(merlin-use-auto-complete-mode (quote easy))
  '(nyan-mode nil)
  '(package-archives
    (quote
     (("gnu" . "http://elpa.gnu.org/packages/")
      ("melpa" . "http://melpa.milkbox.net/packages/"))))
+ '(tab-width 2)
  '(tool-bar-mode nil)
  '(uniquify-buffer-name-style (quote post-forward) nil (uniquify)))
 (custom-set-faces
@@ -148,7 +217,49 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#002b36" :foreground "#839496" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 140 :width normal :foundry "nil" :family "Menlo")))))
+ '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 130 :width normal :foundry "nil" :family "DejaVu Sans Mono")))))
 
-;; Markdown should have line wrap
-(add-hook 'markdown-mode-hook 'turn-on-auto-fill)
+
+;; Setup environment variables using opam
+(dolist (var (car (read-from-string (shell-command-to-string "opam config env --sexp"))))
+  (setenv (car var) (cadr var)))
+
+;; Update the emacs path
+(setq exec-path (append (parse-colon-path (getenv "PATH"))
+                        (list exec-directory)))
+
+;; Update the emacs load path
+(add-to-list 'load-path (expand-file-name "../../share/emacs/site-lisp"
+                                          (getenv "OCAML_TOPLEVEL_PATH")))
+
+;; Automatically load utop.el
+(autoload 'utop "utop" "Toplevel for OCaml" t)
+
+
+;; AucTeX
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+(setq TeX-PDF-mode t)
+ 
+;; Use Skim as viewer, enable source <-> PDF sync
+;; make latexmk available via C-c C-c
+;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
+(add-hook 'LaTeX-mode-hook (lambda ()
+  (push
+    '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+      :help "Run latexmk on file")
+    TeX-command-list)))
+(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
+ 
+;; use Skim as default pdf viewer
+;; Skim's displayline is used for forward search (from .tex to .pdf)
+;; option -b highlights the current line; option -g opens Skim in the background  
+(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+(setq TeX-view-program-list
+     '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
