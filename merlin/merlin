@@ -1,0 +1,12 @@
+PKG bap
+PKG core_kernel
+PKG ocamlbuild
+PKG jsonm
+PKG ocamlgraph
+PKG camlzip
+PKG fileutils
+PKG Re_posix
+PKG Re
+EXT ounit
+EXT here
+EXT nonrec
