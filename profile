@@ -10,6 +10,7 @@ export PATH=~/bin:/opt/local/bin:/opt/local/sbin:$PATH
 . /Users/dbrumley/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
 export OCAMLPARAM="_,bin-annot=1"
 export OPAMKEEPBUILDDIR="yes"
+. /Users/dbrumley/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
 eval `opam config env`
 
 
@@ -33,3 +34,12 @@ function tab_title {
   echo -n -e "\033]0;${PWD##*/}\007"
 }
 PROMPT_COMMAND="tab_title ; $PROMPT_COMMAND"
+
+##
+# Your previous /Users/dbrumley/.profile file was backed up as /Users/dbrumley/.profile.macports-saved_2015-04-05_at_11:27:40
+##
+
+# MacPorts Installer addition on 2015-04-05_at_11:27:40: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+
