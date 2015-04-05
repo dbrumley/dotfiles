@@ -1,11 +1,15 @@
 (package-initialize)
 
-     
+;(require 'org-drill)
+
+;; shortcuts
 (global-set-key "\C-cl" 'goto-line)
 
-;; OCaml configuration
-;;  - better error and backtrace matching
+;; --------------------------------------------------
+;; OCaml Configuration
+;; --------------------------------------------------
 
+;;  - better error and backtrace matching
 (defun set-ocaml-error-regexp ()
   (set
    'compilation-error-regexp-alist
@@ -14,8 +18,6 @@
 
 (add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
 (add-hook 'ocaml-mode-hook 'set-ocaml-error-regexp)
-;; ## added by OPAM user-setup for emacs / base ## 3b3794f813a9e9acda2ddcfcb5defc94 ## you can edit, but keep this line
-;; Base configuration for OPAM
 
 (defun opam-shell-command-to-string (command)
   "Similar to shell-command-to-string, but returns nil unless the process
@@ -45,9 +47,10 @@
   (let ((reply (opam-shell-command-to-string "opam config var share")))
     (when reply (substring reply 0 -1))))
 
+;; Make sure we load from opam
 (add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
-;; OPAM-installed tools automated detection and initialisation
 
+;; OPAM-installed tools automated detection and initialisation
 (defun opam-setup-tuareg ()
   (add-to-list 'load-path (concat opam-share "/tuareg") t)
   (load "tuareg-site-file"))
@@ -186,32 +189,98 @@
      ("Clean" "TeX-clean" TeX-run-function nil t :help "Delete generated intermediate files")
      ("Clean All" "(TeX-clean t)" TeX-run-function nil t :help "Delete generated intermediate and output files")
      ("Other" "" TeX-run-command t t :help "Run an arbitrary command"))))
+ '(ansi-color-names-vector
+   ["#073642" "#dc322f" "#859900" "#b58900" "#268bd2" "#d33682" "#2aa198" "#657b83"])
  '(blink-cursor-mode nil)
  '(column-number-mode t)
- '(custom-enabled-themes (quote (solarized-dark)))
+ '(compilation-message-face (quote default))
+ '(cua-global-mark-cursor-color "#2aa198")
+ '(cua-normal-cursor-color "#839496")
+ '(cua-overwrite-cursor-color "#b58900")
+ '(cua-read-only-cursor-color "#859900")
+ '(custom-enabled-themes (quote (deeper-blue)))
  '(custom-safe-themes
    (quote
-    ("8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
+    ("1c50040ec3b3480b1fec3a0e912cac1eb011c27dd16d087d61e72054685de345" "0820d191ae80dcadc1802b3499f84c07a09803f2cb90b343678bdb03d225b26b" "cd03a600a5f470994ba01dd3d1ff52d5809b59b4a37357fa94ca50a6f7f07473" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
  '(explicit-bash-args (quote ("--login" "-i")))
+ '(fci-rule-color "#073642")
  '(flyspell-issue-message-flag nil)
+ '(highlight-changes-colors (quote ("#d33682" "#6c71c4")))
+ '(highlight-symbol-colors
+   (--map
+    (solarized-color-blend it "#002b36" 0.25)
+    (quote
+     ("#b58900" "#2aa198" "#dc322f" "#6c71c4" "#859900" "#cb4b16" "#268bd2"))))
+ '(highlight-symbol-foreground-color "#93a1a1")
+ '(highlight-tail-colors
+   (quote
+    (("#073642" . 0)
+     ("#546E00" . 20)
+     ("#00736F" . 30)
+     ("#00629D" . 50)
+     ("#7B6000" . 60)
+     ("#8B2C02" . 70)
+     ("#93115C" . 85)
+     ("#073642" . 100))))
+ '(hl-bg-colors
+   (quote
+    ("#7B6000" "#8B2C02" "#990A1B" "#93115C" "#3F4D91" "#00629D" "#00736F" "#546E00")))
+ '(hl-fg-colors
+   (quote
+    ("#002b36" "#002b36" "#002b36" "#002b36" "#002b36" "#002b36" "#002b36" "#002b36")))
  '(ido-enable-flex-matching t)
  '(ido-mode (quote both) nil (ido))
  '(indent-tabs-mode nil)
  '(inhibit-default-init nil)
  '(inhibit-startup-screen t)
+ '(magit-diff-use-overlays nil)
  '(magit-use-overlays nil)
  '(make-backup-files nil)
  '(markdown-command "pandoc --smart -f markdown -t html")
  '(menu-bar-mode nil)
  '(merlin-use-auto-complete-mode (quote easy))
  '(nyan-mode nil)
+ '(org-babel-load-languages (quote ((emacs-lisp . t) (python . t) (sh . t))))
+ '(org-modules
+   (quote
+    (org-bbdb org-bibtex org-docview org-gnus org-habit org-info org-irc org-mhe org-rmail org-w3m org-drill)))
  '(package-archives
    (quote
     (("gnu" . "http://elpa.gnu.org/packages/")
-     ("melpa" . "http://melpa.milkbox.net/packages/"))))
+     ("melpa" . "http://melpa.milkbox.net/packages/")
+     ("org" . "http://orgmode.org/elpa/"))))
+ '(show-paren-mode t)
+ '(smartrep-mode-line-active-bg (solarized-color-blend "#859900" "#073642" 0.2))
  '(tab-width 2)
+ '(term-default-bg-color "#002b36")
+ '(term-default-fg-color "#839496")
  '(tool-bar-mode nil)
- '(uniquify-buffer-name-style (quote post-forward) nil (uniquify)))
+ '(uniquify-buffer-name-style (quote post-forward) nil (uniquify))
+ '(vc-annotate-background nil)
+ '(vc-annotate-color-map
+   (quote
+    ((20 . "#dc322f")
+     (40 . "#c85d17")
+     (60 . "#be730b")
+     (80 . "#b58900")
+     (100 . "#a58e00")
+     (120 . "#9d9100")
+     (140 . "#959300")
+     (160 . "#8d9600")
+     (180 . "#859900")
+     (200 . "#669b32")
+     (220 . "#579d4c")
+     (240 . "#489e65")
+     (260 . "#399f7e")
+     (280 . "#2aa198")
+     (300 . "#2898af")
+     (320 . "#2793ba")
+     (340 . "#268fc6")
+     (360 . "#268bd2"))))
+ '(vc-annotate-very-old-color nil)
+ '(weechat-color-list
+   (quote
+    (unspecified "#002b36" "#073642" "#990A1B" "#dc322f" "#546E00" "#859900" "#7B6000" "#b58900" "#00629D" "#268bd2" "#93115C" "#d33682" "#00736F" "#2aa198" "#839496" "#657b83"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -263,3 +332,26 @@
 (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
 (setq TeX-view-program-list
      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+
+;; This is a little custom function that can be used to
+;; "undo" autofill by refilling everything to one line
+(defun refill-paragraphs-to-be-one-line ()
+  "fill individual paragraphs with large fill column"
+  (interactive)
+  (let ((fill-column 100000))
+    (fill-individual-paragraphs (point-min) (point-max))))
+
+
+;; In docview mode, creates key bindings so that M-[ and M-]
+;; move forward and backward while keeping your cursor within
+;; the buffer. useful for reviewing papers so you can write notes
+;; as you read.  Taken from
+;; http://www.idryman.org/blog/2013/05/20/emacs-and-pdf/
+(fset 'doc-prev "\C-xo\C-x[\C-xo")
+(fset 'doc-next "\C-xo\C-x]\C-xo")
+(global-set-key (kbd "M-[") 'doc-prev)
+(global-set-key (kbd "M-]") 'doc-next)
+
+
+;(require 'org-beautify-theme)
