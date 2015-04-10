@@ -35,11 +35,21 @@ function tab_title {
 }
 PROMPT_COMMAND="tab_title ; $PROMPT_COMMAND"
 
-##
-# Your previous /Users/dbrumley/.profile file was backed up as /Users/dbrumley/.profile.macports-saved_2015-04-05_at_11:27:40
-##
 
 # MacPorts Installer addition on 2015-04-05_at_11:27:40: adding an appropriate PATH variable for use with MacPorts.
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
-# Finished adapting your PATH environment variable for use with MacPorts.
 
+# I install with pip using --user; this is the default bin dir for 
+# the resulting files.
+export PATH=/Users/dbrumley/Library/Python/2.7/bin/:$PATH
+
+# Make `pip install` install with --user by default
+pip() {
+  if [ "$1" = "install" -o "$1" = "bundle" ]; then
+    cmd="$1"
+    shift
+    /opt/local/bin/pip $cmd --user $@
+  else
+    /opt/local/bin/pip $@
+  fi
+}
