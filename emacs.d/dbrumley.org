@@ -1,0 +1,364 @@
+#+TITLE: David Brumley's Emacs Configuration
+#+OPTIONS: toc:4 h:4
+
+* Configuration
+** About this file
+
+This file is inspired by [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs Configuration]] using
+literate programming for her Emacs configuration. 
+
+My =~/.emacs.d/init.el= file starts off simply:
+#+begin_src emacs-lisp :tangle no
+(require 'package)
+(org-babel-load-file "~/.emacs.d/dbrumley.org")
+#+end_src
+
+The first line is needed to start up the package manager. The second
+says to load the rest from my org file. 
+
+** Personal information
+#+BEGIN_SRC emacs-lisp
+(setq user-full-name "David Brumley"
+      user-mail-address "dbrumley@cmu.edu")
+#+END_SRC
+
+** Basic configuration and initialization
+*** Add some additional repositories
+
+#+BEGIN_SRC emacs-lisp
+(setq package-archives
+      '(("gnu"         . "http://elpa.gnu.org/packages/")
+        ("org"         . "http://orgmode.org/elpa/")
+        ("melpa"       . "http://melpa.org/packages/")
+        ("marmalade"   . "http://marmalade-repo.org/packages/")))
+(package-initialize)
+#+END_SRC
+
+Use =M-x package-refresh-contents= to reload the list of packages
+after adding this the first time, and subsequent edits. 
+
+*** OS X behaviors
+According to the [[https://github.com/eschulte/emacs24-starter-kit/blob/master/starter-kit.org][starter kit]], there is a bug on OS X where system-name
+is FQDN.
+
+#+BEGIN_SRC emacs-lisp
+(if (or
+    (eq system-type 'darwin)
+    (eq system-type 'berkeley-unix))
+    (setq system-name (car (split-string system-name "\\."))))
+#+END_SRC
+
+*** Use the system defined web browser
+
+#+BEGIN_SRC emacs-lisp
+(setq browse-url-browser-function 'browse-default-macosx-browser)
+#+END_SRC
+
+*** Set up UTF-8
+The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.org/emacs/EmacsForMacOS][Emacs Wiki]]
+
+#+BEGIN_SRC emacs-lisp
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+#+END_SRC
+
+*** Add macports to path
+Among other things, this allows emacs to find ispell (aka aspell).
+Note that I'm putting =/opt/local/bin= before the normal system
+path on purpose. 
+#+BEGIN_SRC emacs-lisp
+  (setq exec-path (append '("/opt/local/bin") exec-path))
+#+END_SRC
+** Preferences
+*** Highlight matching parentheses
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode 1)
+#+END_SRC
+
+*** Turn off tabs
+#+BEGIN_SRC emacs-lisp
+  (set-default 'indent-tabs-mode nil)
+#+END_SRC
+
+*** Indicate empty lines
+#+BEGIN_SRC emacs-lisp
+  (set-default 'indicate-empty-lines t)
+#+END_SRC
+
+*** Turn on auto-fill for text mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'text-mode-hook 'turn-on-auto-fill)
+#+END_SRC
+    
+*** Turn off backup files
+#+BEGIN_SRC emacs-lisp
+  (set-default 'make-backup-files nil)
+#+END_SRC
+
+*** Change "yes or no" to "y or n"
+#+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+*** Turn on flyspell mode for text
+#+BEGIN_SRC emacs-lisp
+  (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+#+END_SRC
+** Packages
+*** IDO
+*** Enable IDO on all the things
+#+BEGIN_SRC emacs-lisp
+(require 'ido)
+(ido-mode t)
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+#+END_SRC
+
+*** org-mode
+
+Set up the default directory for org files:
+#+BEGIN_SRC emacs-lisp
+  (setq org-directory "~/Dropbox/org-mode")
+#+END_SRC
+
+*** Default packages to install if not already present
+
+This function and setup installs some basic packages.
+  * [[http://magit.vc][magit]] for git
+  * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
+    commands.
+  * [[http://emacswiki.org/emacs/AutoComplete][auto complete]] which is used for python (below), and auto-complete
+    goodness in general.
+  * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
+    the length of the editing window, e.g., to see when to create a
+    newline
+  * [[http://emacswiki.org/emacs/ProgrammingWithPythonModeDotEl][python-mode]] for editing python code
+
+
+#+BEGIN_SRC emacs-lisp
+(defvar mypackages '(magit smex auto-complete 
+                      fill-column-indicator python-mode))
+
+(package-initialize)
+(dolist (p mypackages)
+  (when (not (package-installed-p p))
+    (package-install p)))
+#+END_SRC
+
+** Load fill-column-indicator for visual feedback on EOL
+#+BEGIN_SRC emacs-lisp
+(require 'fill-column-indicator)
+(define-globalized-minor-mode
+ global-fci-mode fci-mode (lambda () (fci-mode 1)))
+(global-fci-mode t)
+#+END_SRC
+
+** OCaml
+Everything OCaml related is done out of opam, not the default emacs
+package sites. This was taken from the opam =user-setup= package and
+Ivan's configuration. 
+
+*** Set up the basic environment. 
+#+BEGIN_SRC emacs-lisp
+(add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
+(add-hook 'ocaml-mode-hook 'set-ocaml-error-regexp)
+
+(defun opam-shell-command-to-string (command)
+  "Similar to shell-command-to-string, but returns nil unless the process
+  returned 0 (shell-command-to-string ignores return value)"
+  (let* ((return-value 0)
+         (return-string
+          (with-output-to-string
+            (setq return-value
+                  (with-current-buffer standard-output
+                    (process-file shell-file-name nil t nil
+                                  shell-command-switch command))))))
+    (if (= return-value 0) return-string nil)))
+
+(defun opam-update-env ()
+  "Update the environment to follow current OPAM switch configuration"
+  (interactive)
+  (let ((env (opam-shell-command-to-string "opam config env --sexp")))
+    (when env
+      (dolist (var (car (read-from-string env)))
+        (setenv (car var) (cadr var))
+        (when (string= (car var) "PATH")
+          (setq exec-path (split-string (cadr var) path-separator)))))))
+
+(opam-update-env)
+
+(setq opam-share
+  (let ((reply (opam-shell-command-to-string "opam config var share")))
+    (when reply (substring reply 0 -1))))
+#+END_SRC
+
+*** Make sure we load opam emacs files first.
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
+#+END_SRC
+
+*** opam installed tools automatic detection and initialization
+Note we set up merlin to easy mode. 
+
+#+BEGIN_SRC emacs-lisp
+  (defun opam-setup-tuareg ()
+    (add-to-list 'load-path (concat opam-share "/tuareg") t)
+    (load "tuareg-site-file"))
+
+  (defun opam-setup-ocp-indent ()
+    (require 'ocp-indent))
+
+  (defun opam-setup-ocp-index ()
+    (require 'ocp-index))
+
+  (defun opam-setup-merlin ()
+    (require 'merlin)
+    (add-hook 'tuareg-mode-hook 'merlin-mode t)
+    (add-hook 'caml-mode-hook 'merlin-mode t)
+    (set-default 'ocp-index-use-auto-complete nil)
+    (set-default 'merlin-use-auto-complete-mode 'easy)
+    ;; So you can do it on a mac, where `C-<up>` and `C-<down>` are used
+    ;; by spaces.
+    (define-key merlin-mode-map
+      (kbd "C-c <up>") 'merlin-type-enclosing-go-up)
+    (define-key merlin-mode-map
+      (kbd "C-c <down>") 'merlin-type-enclosing-go-down)
+    (set-face-background 'merlin-type-face "skyblue"))
+
+  (defun opam-setup-utop ()
+    (autoload 'utop "utop" "Toplevel for OCaml" t)
+    (autoload 'utop-setup-ocaml-buffer "utop" "Toplevel for OCaml" t)
+    (add-hook 'tuareg-mode-hook 'utop-setup-ocaml-buffer))
+
+  (setq opam-tools
+    '(("tuareg" . opam-setup-tuareg)
+      ("ocp-indent" . opam-setup-ocp-indent)
+      ("ocp-index" . opam-setup-ocp-index)
+      ("merlin" . opam-setup-merlin)
+      ("utop" . opam-setup-utop)))
+
+  (defun opam-detect-installed-tools ()
+    (let*
+        ((command "opam list --installed --short --safe --color=never")
+         (names (mapcar 'car opam-tools))
+         (command-string (mapconcat 'identity (cons command names) " "))
+         (reply (opam-shell-command-to-string command-string)))
+      (when reply (split-string reply))))
+
+  (setq opam-tools-installed (opam-detect-installed-tools))
+
+  (defun opam-auto-tools-setup ()
+    (interactive)
+    (dolist
+        (f (mapcar (lambda (x) (cdr (assoc x opam-tools))) opam-tools-installed))
+      (funcall (symbol-function f))))
+
+  (opam-auto-tools-setup)
+#+END_SRC
+
+*** =C-c c= for recompile
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'tuareg-mode-hook
+          (lambda () 
+            (merlin-mode)
+            (local-set-key (kbd "C-c c") 'recompile)
+            (local-set-key (kbd "C-c C-c") 'recompile)
+            (auto-fill-mode)))
+#+END_SRC
+
+** Python
+My python setup is taken from the [[http://www.jesshamrick.com/2012/09/18/emacs-as-a-python-ide/][emacs as a python ide]] page.
+
+*** Load python
+#+BEGIN_SRC emacs-lisp
+(require 'python-mode)
+#+END_SRC
+
+*** Use ipython by default
+#+BEGIN_SRC emacs-lisp
+(setq-default py-shell-name "ipython")
+(setq-default py-which-bufname "IPython")
+#+END_SRC
+
+*** Switch to the interpreter after executing code
+#+BEGIN_SRC emacs-lisp
+(setq py-shell-switch-buffers-on-execute-p t)
+(setq py-switch-buffers-on-execute-p t)
+#+END_SRC
+
+*** Don't split windows
+#+BEGIN_SRC emacs-lisp
+(setq py-split-windows-on-execute-p nil)
+#+END_SRC
+
+*** Try to infer indentation
+#+BEGIN_SRC emacs-lisp
+(setq py-smart-indentation t)
+#+END_SRC
+
+** Latex/Docview setup
+*** Setup auctex
+#+BEGIN_SRC 
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+(setq TeX-PDF-mode t)
+#+END_SRC
+*** Set up skim for latex preview sync (not in use)
+Currently not used.  Use Skim as viewer, enable source <-> PDF sync.
+Skim's displayline is used for forward search (from .tex to .pdf).
+The option -b highlights the current line; option -g opens Skim in the
+background
+
+#+BEGIN_SRC emacs-lisp
+;(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+; (setq TeX-view-program-list
+;      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+#+END_SRC
+
+*** Use latexmk for compilation via C-c C-c.  
+
+Note: SyncTeX is setup via ~/.latexmkrc (see below)
+#+BEGIN_SRC emacs-lisp
+(add-hook 'LaTeX-mode-hook (lambda ()
+  (push
+    '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+      :help "Run latexmk on file")
+    TeX-command-list)))
+(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
+ 
+#+END_SRC
+
+*** handy in-emacs pdf navigation
+In docview mode, creates key bindings so that =M-[= and =M-]= move forward
+and backward while keeping your cursor within the buffer. useful for
+reviewing papers so you can write notes as you read.  Taken from
+[[http://www.idryman.org/blog/2013/05/20/emacs-and-pdf/]]
+
+#+BEGIN_SRC emacs-lisp
+(fset 'doc-prev "\C-xo\C-x[\C-xo")
+(fset 'doc-next "\C-xo\C-x]\C-xo")
+(global-set-key (kbd "M-[") 'doc-prev)
+(global-set-key (kbd "M-]") 'doc-next)
+#+END_SRC
+
+* Some Reminders
+** Evaluate lisp statements
+In emacs, you can evaluate a LISP command with =C-x C-e=. 
+** See the value of a variable
+You can use =M-x describe-variable= to see the value of a variable,
+e.g., =exec-path= is the equivalent of =PATH= in emacs.
+
+** Insert a code block in org mode
+Type =<s= followed by the TAB key. You can then do =C-c '= (that is a
+single quote) within the code block to bring up a separate
+window. After editing, type =C-c '= again to return to the main
+buffer. 
