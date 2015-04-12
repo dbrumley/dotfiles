@@ -125,7 +125,7 @@ This function and setup installs some basic packages.
   * [[http://www.jonnay.net/bloggity-blog/2014/12/29_making-org-mode-typography-suck-a-little-less.html][org-beautify-theme]] to make org-mode a little more beautiful
   * [[https://github.com/steckerhalter/discover-my-major][discover-my-major]] since you should never stop learning shortcuts
   * org-pandoc to export org using pandoc
-
+  * powerline
 
 #+BEGIN_SRC emacs-lisp
 (defvar mypackages '(magit smex auto-complete 
@@ -133,7 +133,7 @@ This function and setup installs some basic packages.
                       markdown-mode moe-theme solarized-theme
                       ido-vertical-mode org-beautify-theme
                       discover-my-major
-                      org-pandoc
+                      org-pandoc powerline
                      ))
 
 (package-initialize)
@@ -167,6 +167,12 @@ Set up the default directory for org files:
 *** Set up =C-h C-m= for discover-my-major
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-h C-m") 'discover-my-major)
+#+END_SRC
+*** Set up moe theme
+#+BEGIN_SRC emacs-lisp
+(require 'moe-theme)
+(moe-dark)
+(powerline-moe-theme)
 #+END_SRC
 ** Load fill-column-indicator for visual feedback on EOL
 #+BEGIN_SRC emacs-lisp
