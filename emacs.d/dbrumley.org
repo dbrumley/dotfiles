@@ -107,6 +107,41 @@ path on purpose.
     (add-hook hook (lambda () (flyspell-mode 1))))
 #+END_SRC
 ** Packages
+*** Default packages to install if not already present
+
+This function and setup installs some basic packages.
+  * [[http://magit.vc][magit]] for git
+  * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
+    commands.
+  * [[http://emacswiki.org/emacs/AutoComplete][auto complete]] which is used for python (below), and auto-complete
+    goodness in general.
+  * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
+    the length of the editing window, e.g., to see when to create a
+    newline
+  * [[http://emacswiki.org/emacs/ProgrammingWithPythonModeDotEl][python-mode]] for editing python code
+  * [[http://jblevins.org/projects/markdown-mode/][markdown-mode]] for markdown
+  * [[https://github.com/bbatsov/solarized-emacs][solarized-theme]] and [[https://github.com/kuanyui/moe-theme.el][moe-theme]], which are popular themes
+  * [[https://github.com/gempesaw/ido-vertical-mode.el][ido-vertical-mode]] for vertical ido completion
+  * [[http://www.jonnay.net/bloggity-blog/2014/12/29_making-org-mode-typography-suck-a-little-less.html][org-beautify-theme]] to make org-mode a little more beautiful
+  * [[https://github.com/steckerhalter/discover-my-major][discover-my-major]] since you should never stop learning shortcuts
+  * org-pandoc to export org using pandoc
+
+
+#+BEGIN_SRC emacs-lisp
+(defvar mypackages '(magit smex auto-complete 
+                      fill-column-indicator python-mode
+                      markdown-mode moe-theme solarized-theme
+                      ido-vertical-mode org-beautify-theme
+                      discover-my-major
+                      org-pandoc
+                     ))
+
+(package-initialize)
+(dolist (p mypackages)
+  (when (not (package-installed-p p))
+    (package-install p)))
+#+END_SRC
+
 *** IDO
 *** Enable IDO on all the things
 #+BEGIN_SRC emacs-lisp
@@ -122,31 +157,17 @@ Set up the default directory for org files:
 #+BEGIN_SRC emacs-lisp
   (setq org-directory "~/Dropbox/org-mode")
 #+END_SRC
-
-*** Default packages to install if not already present
-
-This function and setup installs some basic packages.
-  * [[http://magit.vc][magit]] for git
-  * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
-    commands.
-  * [[http://emacswiki.org/emacs/AutoComplete][auto complete]] which is used for python (below), and auto-complete
-    goodness in general.
-  * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
-    the length of the editing window, e.g., to see when to create a
-    newline
-  * [[http://emacswiki.org/emacs/ProgrammingWithPythonModeDotEl][python-mode]] for editing python code
-
-
+*** Turn on ido-vertical
 #+BEGIN_SRC emacs-lisp
-(defvar mypackages '(magit smex auto-complete 
-                      fill-column-indicator python-mode))
-
-(package-initialize)
-(dolist (p mypackages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+(require 'ido-vertical-mode)
+(ido-mode 1)
+(ido-vertical-mode 1)
+(setq ido-vertical-count t)
 #+END_SRC
-
+*** Set up =C-h C-m= for discover-my-major
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-h C-m") 'discover-my-major)
+#+END_SRC
 ** Load fill-column-indicator for visual feedback on EOL
 #+BEGIN_SRC emacs-lisp
 (require 'fill-column-indicator)
@@ -350,6 +371,24 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
 
+** Org-mode
+*** Submodules
+Org has a bunch of possible modules.  These are some ones that look
+interesting.
+#+BEGIN_SRC emacs-lisp
+(setq org-modules '(org-drill
+                     org-habit
+                     org-jekyll
+                    ))
+(eval-after-load 'org
+ '(org-load-modules-maybe t))
+(setq org-expiry-inactive-timestamps t)
+#+END_SRC
+*** fontify buffers
+#+BEGIN_SRC emacs-lisp
+(setq org-src-fontify-natively t)
+#+END_SRC
+
 * Some Reminders
 ** Evaluate lisp statements
 In emacs, you can evaluate a LISP command with =C-x C-e=. 
@@ -362,3 +401,6 @@ Type =<s= followed by the TAB key. You can then do =C-c '= (that is a
 single quote) within the code block to bring up a separate
 window. After editing, type =C-c '= again to return to the main
 buffer. 
+** Use discover-my-major
+Discover my major will show you key bindings in the current major
+mode. By default the key binding is =C-h C-m=
