@@ -70,6 +70,10 @@ path on purpose.
 #+BEGIN_SRC emacs-lisp
   (setq exec-path (append '("/opt/local/bin") exec-path))
 #+END_SRC
+*** Turn off splash screen
+#+BEGIN_SRC emacs-lisp
+(setq inhibit-splash-screen t) 
+#+END_SRC
 ** Preferences
 *** Highlight matching parentheses
 #+BEGIN_SRC emacs-lisp
@@ -106,6 +110,19 @@ path on purpose.
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
 #+END_SRC
+*** Use SSH by default for TRAMP
+#+BEGIN_SRC emacs-lisp
+(setq tramp-default-method "ssh")
+#+END_SRC
+*** Turn off toolbar
+#+BEGIN_SRC emacs-lisp
+(tool-bar-mode -1) 
+#+END_SRC
+*** Put time in status bar
+#+BEGIN_SRC emacs-lisp
+  (setq display-time-day-and-date t display-time-24hr-format t)
+               (display-time)
+#+END_SRC
 ** Packages
 *** Default packages to install if not already present
 
@@ -113,12 +130,9 @@ This function and setup installs some basic packages.
   * [[http://magit.vc][magit]] for git
   * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
     commands.
-  * [[http://emacswiki.org/emacs/AutoComplete][auto complete]] which is used for python (below), and auto-complete
-    goodness in general.
   * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
     the length of the editing window, e.g., to see when to create a
     newline
-  * [[http://emacswiki.org/emacs/ProgrammingWithPythonModeDotEl][python-mode]] for editing python code
   * [[http://jblevins.org/projects/markdown-mode/][markdown-mode]] for markdown
   * [[https://github.com/bbatsov/solarized-emacs][solarized-theme]] and [[https://github.com/kuanyui/moe-theme.el][moe-theme]], which are popular themes
   * [[https://github.com/gempesaw/ido-vertical-mode.el][ido-vertical-mode]] for vertical ido completion
@@ -126,14 +140,20 @@ This function and setup installs some basic packages.
   * [[https://github.com/steckerhalter/discover-my-major][discover-my-major]] since you should never stop learning shortcuts
   * org-pandoc to export org using pandoc
   * powerline
+  * reverse-theme
+  * yaml-mode
+  * gh-md: render markdown with the github api
 
 #+BEGIN_SRC emacs-lisp
-(defvar mypackages '(magit smex auto-complete 
-                      fill-column-indicator python-mode
+(defvar mypackages '(magit smex  
+                      fill-column-indicator 
                       markdown-mode moe-theme solarized-theme
                       ido-vertical-mode org-beautify-theme
                       discover-my-major
                       org-pandoc powerline
+                      reverse-theme yaml-mode elpy
+                      company-quickhelp gh-md
+                      auctex auctex-latexmk
                      ))
 
 (package-initialize)
@@ -143,6 +163,10 @@ This function and setup installs some basic packages.
 #+END_SRC
 
 *** IDO
+*** Autocomplete
+#+BEGIN_SRC emacs-lisp
+(require 'auto-complete)
+#+END_SRC
 *** Enable IDO on all the things
 #+BEGIN_SRC emacs-lisp
 (require 'ido)
@@ -168,18 +192,27 @@ Set up the default directory for org files:
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-h C-m") 'discover-my-major)
 #+END_SRC
-*** Set up moe theme
-#+BEGIN_SRC emacs-lisp
-(require 'moe-theme)
-(moe-dark)
-(powerline-moe-theme)
-#+END_SRC
 ** Load fill-column-indicator for visual feedback on EOL
 #+BEGIN_SRC emacs-lisp
 (require 'fill-column-indicator)
 (define-globalized-minor-mode
  global-fci-mode fci-mode (lambda () (fci-mode 1)))
 (global-fci-mode t)
+#+END_SRC
+
+** YAML
+
+RAML is a markup language based on YAML. There is currently no RAML
+mode, but YAML is close enough.
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.raml\\'" . yaml-mode))
+(add-to-list 'ac-modes 'yaml-mode)
+#+END_SRC
+
+And then load yaml
+#+BEGIN_SRC emacs-lisp
+(require 'yaml-mode)
 #+END_SRC
 
 ** OCaml
@@ -295,74 +328,251 @@ Note we set up merlin to easy mode.
             (local-set-key (kbd "C-c C-c") 'recompile)
             (auto-fill-mode)))
 #+END_SRC
-
+*** Set up atdgen 
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.atd\\'" . tuareg-mode))
+#+END_SRC
 ** Python
-My python setup is taken from the [[http://www.jesshamrick.com/2012/09/18/emacs-as-a-python-ide/][emacs as a python ide]] page.
 
-*** Load python
+I am a basic elpy user. Note that often I will want to edit a file
+that doesn't conform to pep8.  To disable all those annoying warnings,
+just turn off =flymake-mode=. For now I leave it on by default.
+
+
+First, enable elpy
 #+BEGIN_SRC emacs-lisp
-(require 'python-mode)
+;(require 'elpy)
+(elpy-enable)
 #+END_SRC
 
-*** Use ipython by default
+Then, enable quickhints, which provide pydoc documentation on
+autocomplete.
 #+BEGIN_SRC emacs-lisp
-(setq-default py-shell-name "ipython")
-(setq-default py-which-bufname "IPython")
+(company-quickhelp-mode)
 #+END_SRC
 
-*** Switch to the interpreter after executing code
+Disable flycheck because a lot of code I look at doesn't conform to
+pep8 or pass flake8. I wish the code I looked at was better and I
+didn't have to disable :)
+
 #+BEGIN_SRC emacs-lisp
-(setq py-shell-switch-buffers-on-execute-p t)
-(setq py-switch-buffers-on-execute-p t)
+(setq elpy-modules
+    (quote
+     (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
+
 #+END_SRC
 
-*** Don't split windows
-#+BEGIN_SRC emacs-lisp
-(setq py-split-windows-on-execute-p nil)
-#+END_SRC
-
-*** Try to infer indentation
-#+BEGIN_SRC emacs-lisp
-(setq py-smart-indentation t)
-#+END_SRC
+# fix two key binding bugs in elpy. This is taken from [[https://www.youtube.com/watch?v%3D0kuCeS-mfyc][this tutorial
+# video]]. 
+# #+BEGIN_SRC emacs-lisp
+# (define-key yas-minor-mode-map (kbd "C-c k") 'yas-expand)
+# (define-key global-map (kbd "C-c o") 'iedit-mode)
+# #+END_SRC
 
 ** Latex/Docview setup
-*** Setup auctex
-#+BEGIN_SRC 
-(setq TeX-auto-save t)
-(setq TeX-parse-self t)
-(setq-default TeX-master nil)
-(add-hook 'LaTeX-mode-hook 'visual-line-mode)
-(add-hook 'LaTeX-mode-hook 'flyspell-mode)
-(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
-(setq reftex-plug-into-AUCTeX t)
-(setq TeX-PDF-mode t)
-#+END_SRC
-*** Set up skim for latex preview sync (not in use)
-Currently not used.  Use Skim as viewer, enable source <-> PDF sync.
-Skim's displayline is used for forward search (from .tex to .pdf).
-The option -b highlights the current line; option -g opens Skim in the
-background
-
+*** Setup auctex basics
 #+BEGIN_SRC emacs-lisp
-;(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-; (setq TeX-view-program-list
-;      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;; LATEXMK and AUCTEX ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; http://tex.stackexchange.com/a/156617/26911
+
+  ;; Sample `latexmkrc` for OSX that copies the *.pdf file from the `/tmp` directory
+  ;; to the working directory:
+  ;;    $pdflatex = 'pdflatex -file-line-error -synctex=1 %O %S && (cp "%D" "%R.pdf")';
+  ;;    $pdf_mode = 1;
+  ;;    $out_dir = '/tmp';"
+
+  ;; Skim's displayline is used for forward search (from .tex to .pdf)
+  ;; option -b highlights the current line
+  ;; option -g opens Skim in the background
+  ;; option -o open Skim in the foreground with full application focus.
+
+  ;; Skim -- turn on auto-refresh by typing the following into the terminal:
+  ;; defaults write -app Skim SKAutoReloadFileUpdate -boolean true
+
+  ;; TexLive on OSX:
+  ;; (setenv "PATH" (concat (getenv "PATH") ":/usr/texbin"))
+
+  (eval-after-load "tex" '(progn
+
+    (add-to-list 'TeX-expand-list '("%(tex-file-name)" (lambda ()
+      (concat "\"" (buffer-file-name) "\""))))
+
+    (add-to-list 'TeX-expand-list '("%(pdf-file-name)" (lambda ()
+      (concat
+        "\"" (car (split-string (buffer-file-name) "\\.tex"))
+        ".pdf" "\""))))
+
+    (add-to-list 'TeX-expand-list '("%(line-number)" (lambda ()
+      (format "%d" (line-number-at-pos)))))
+
+        (add-to-list 'TeX-expand-list '("%(latexmkrc-osx)" (lambda () "/Users/dbrumley/.latexmkrc")))
+
+        (add-to-list 'TeX-command-list '("latexmk-osx" "latexmk -r %(latexmkrc-osx) %s" TeX-run-TeX nil t))
+
+        (add-to-list 'TeX-expand-list '("%(skim)" (lambda () "/Applications/Skim.app/Contents/SharedSupport/displayline")))
+
+        (add-to-list 'TeX-command-list '("Skim" "%(skim) -o %(line-number) %(pdf-file-name) %(tex-file-name)" TeX-run-TeX nil t))
+
+        (add-to-list 'TeX-view-program-list '("skim-viewer" "%(skim) -o %(line-number) %(pdf-file-name) %(tex-file-name)"))
+
+        (setq TeX-view-program-selection '((output-pdf "skim-viewer")))
+        ))
+
+
+  (defun auctex-latexmk ()
+  "Compile, view *.pdf, and clean (maybe)."
+  (interactive)
+    (require 'tex)
+    (require 'latex)
+    (let* (
+        (TeX-PDF-mode t)
+        (TeX-source-correlate-mode t)
+        (TeX-source-correlate-method 'synctex) 
+        (TeX-source-correlate-start-server nil)
+        (TeX-clean-confirm t))
+      (when (buffer-modified-p)
+        (save-buffer))
+      (set-process-sentinel
+        (TeX-command "LaTeX" 'TeX-master-file)
+          (lambda (p e)
+            (when (not (= 0 (process-exit-status p)))
+              (TeX-next-error t) )
+            (when (= 0 (process-exit-status p))
+              (delete-other-windows)
+              (TeX-command "View" 'TeX-active-master 0)
+              ;; `set-process-sentinel` cannot be used on Windows XP for post-view cleanup,
+              ;; because Emacs treats SumatraPDF as an active process until SumatraPDF exits.
+              (let ((major-mode 'latex-mode))
+                (TeX-command "Clean" 'TeX-master-file)))))))
+
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; LATEXMK START-PROCESS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; (defun combined-latexmk-function ()
+  ;; (interactive)
+  ;;   (cond
+  ;;     ((eq system-type 'darwin)
+  ;;       (latexmk))
+  ;;     ((eq system-type 'windows-nt)
+  ;;       (xp-latexmk) )))
+
+  ;; (defun xp-latexmk ()
+  ;; ".latexmkrc contains the following entries:
+  ;;   $pdflatex = 'pdflatex -file-line-error -synctex=1 %O %S';
+  ;;   $pdf_mode = 1;
+  ;;   $recorder = 0;
+  ;;   $clean_ext = 'synctex.gz synctex.gz(busy) aux fdb_latexmk log';"
+  ;; (interactive)
+  ;;   (lexical-let* (
+  ;;       (latexmk-tex-file (buffer-file-name))
+  ;;       (latexmk-base-file (car (split-string (buffer-file-name) "\\.tex")))
+  ;;       (latexmk-w32-tex-file (concat "\"" (buffer-file-name) "\""))
+  ;;       (latexmk-w32-pdf-file (concat "\"" latexmk-base-file ".pdf" "\""))
+  ;;       (latexmk-line (format "%d" (line-number-at-pos)))
+  ;;       (latexmk-sumatra "c:/Program Files/SumatraPDF/SumatraPDF.exe")
+  ;;       (latexmk-w32-document (concat
+  ;;         "-reuse-instance"
+  ;;           " "
+  ;;         "-forward-search"
+  ;;           " "
+  ;;         latexmk-w32-tex-file
+  ;;           " "
+  ;;         latexmk-line
+  ;;           " "
+  ;;         latexmk-w32-pdf-file))
+  ;;       (latexmk-tex-output (concat "*" (file-name-nondirectory buffer-file-name) "*") )
+  ;;       (latexmk-pl "c:/texlive/2013/bin/win32/latexmk.exe")
+  ;;       (latexmk-latexmkrc "y:/.0.data/.0.emacs/.latexmkrc-nt") )
+  ;;     (if (buffer-modified-p)
+  ;;       (save-buffer))
+  ;;     (delete-other-windows)
+  ;;     (set-window-buffer (split-window-horizontally) (get-buffer-create latexmk-tex-output))
+  ;;     (with-current-buffer latexmk-tex-output (erase-buffer))
+  ;;     ;; `-reuse-instance` seems to be working very nicely, so no need to kill prior instance.
+  ;;     ;; (start-process "tskill" nil "c:/WINDOWS/system32/tskill.exe" "SumatraPDF")
+  ;;     (set-process-sentinel 
+  ;;       (start-process "deep-clean" nil latexmk-pl "-C" "-r" latexmk-latexmkrc latexmk-tex-file)
+  ;;       (lambda (p e) (when (= 0 (process-exit-status p))
+  ;;         (set-process-sentinel 
+  ;;           (start-process "compile" latexmk-tex-output latexmk-pl "-r" latexmk-latexmkrc latexmk-tex-file)
+  ;;           (lambda (p e) (when (= 0 (process-exit-status p))
+  ;;             (when (get-buffer-process (get-buffer latexmk-tex-output))
+  ;;               (process-kill-without-query (get-buffer-process
+  ;;                 (get-buffer latexmk-tex-output))))
+  ;;             (kill-buffer latexmk-tex-output)
+  ;;             (delete-other-windows)
+  ;;             (switch-to-buffer (get-file-buffer latexmk-tex-file))
+  ;;             (w32-shell-execute "open" latexmk-sumatra latexmk-w32-document)
+  ;;             (sit-for 1)
+  ;;             (start-process "clean" nil latexmk-pl "-c" "-r" latexmk-latexmkrc latexmk-tex-file)))))))))
+
+  ;; (defun latexmk-process-filter (proc string)
+  ;;   (let ((inhibit-read-only t))
+  ;;     (with-current-buffer (messages-buffer)
+  ;;       (goto-char (point-max))
+  ;;       (when (not (bolp))
+  ;;         (insert "\n"))
+  ;;       (insert string)
+  ;;       (when (not (bolp))
+  ;;         (insert "\n")))
+  ;;     (when (string-match "?" string)
+  ;;       (display-buffer (messages-buffer))
+  ;;       (with-current-buffer (messages-buffer)
+  ;;         (goto-char (point-max))
+  ;;         (walk-windows
+  ;;           (lambda (window)
+  ;;             (when (string-equal (buffer-name (window-buffer window)) "*Messages*")
+  ;;               (set-window-point window (point-max))))
+  ;;           nil t)))))
+
+  ;; (defun latexmk ()
+  ;;   ".latexmkrc contains the following entries (WITHOUT the four backslashes):
+  ;;   $pdflatex = 'pdflatex -file-line-error -synctex=1 %O %S && (cp \"%D\" \"%R.pdf\")';
+  ;;   $pdf_mode = 1;
+  ;;   $out_dir = '/tmp';"
+  ;; (interactive)
+  ;;   (lexical-let* (
+  ;;       (latexmk-tex-file buffer-file-name)
+  ;;       (latexmk-pdf-file (concat "/tmp/"
+  ;;         (car (split-string (file-name-nondirectory buffer-file-name) "\\.tex")) ".pdf"))
+  ;;       (latexmk-line (format "%d" (line-number-at-pos)))
+  ;;       (latexmk-skim "/Applications/Skim.app/Contents/SharedSupport/displayline")
+  ;;       (latexmk-pl "/usr/local/texlive/2012/texmf-dist/scripts/latexmk/latexmk.pl")
+  ;;       (latexmk-latexmkrc "/Users/HOME/.0.data/.0.emacs/.latexmkrc")
+  ;;       (latexmk-close-skim-window (concat
+  ;;         "set myWindowTitle to \"" (file-name-nondirectory latexmk-pdf-file) "\"\n"
+  ;;         "tell application \"System Events\"\n"
+  ;;         "tell application \"Skim\" to close (every window whose name contains myWindowTitle)\n"
+  ;;         "end tell")) )
+  ;;     (when (buffer-modified-p)
+  ;;       (save-buffer))
+  ;;     (when (not (one-window-p t))
+  ;;       (delete-other-windows))
+  ;;     (set-process-sentinel
+  ;;       (start-process "close-window" nil "osascript" "-e" latexmk-close-skim-window)
+  ;;       (lambda (p e) (when (= 0 (process-exit-status p))
+  ;;         (set-process-sentinel
+  ;;           (start-process "deep-clean" nil latexmk-pl "-C" "-r" latexmk-latexmkrc latexmk-tex-file)
+  ;;           (lambda (p e) (when (= 0 (process-exit-status p))
+  ;;             (when (get-process "compile")
+  ;;               (delete-process (get-process "compile")))
+  ;;             (start-process "compile" nil latexmk-pl "-r" latexmk-latexmkrc latexmk-tex-file)
+  ;;             (set-process-filter (get-process "compile") 'latexmk-process-filter)
+  ;;             (set-process-sentinel
+  ;;               (get-process "compile")
+  ;;               (lambda (p e) (when (= 0 (process-exit-status p))
+  ;;                 (set-process-sentinel
+  ;;                   (start-process "displayline" nil latexmk-skim latexmk-line latexmk-pdf-file latexmk-tex-file)
+  ;;                   (lambda (p e) (when (= 0 (process-exit-status p))
+  ;;                     (when (not (one-window-p t))
+  ;;                       (delete-other-windows))))))))))))))))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #+END_SRC
 
 *** Use latexmk for compilation via C-c C-c.  
 
-Note: SyncTeX is setup via ~/.latexmkrc (see below)
-#+BEGIN_SRC emacs-lisp
-(add-hook 'LaTeX-mode-hook (lambda ()
-  (push
-    '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
-      :help "Run latexmk on file")
-    TeX-command-list)))
-(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
- 
-#+END_SRC
 
 *** handy in-emacs pdf navigation
 In docview mode, creates key bindings so that =M-[= and =M-]= move forward
@@ -376,8 +586,19 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-[") 'doc-prev)
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
+*** Set up resolution for doc-view
+The goal was for retina display to work inside emacs. Unfortunately it
+doesn't seem to work below. I guess I'll use an external display :(
+#+BEGIN_SRC emacs-lisp
+;(setq doc-view-resolution 300)
+#+END_SRC
+
 
 ** Org-mode
+*** Load up org mode
+#+BEGIN_SRC emacs-lisp
+(require 'org)
+#+END_SRC
 *** Submodules
 Org has a bunch of possible modules.  These are some ones that look
 interesting.
@@ -390,9 +611,67 @@ interesting.
  '(org-load-modules-maybe t))
 (setq org-expiry-inactive-timestamps t)
 #+END_SRC
+*** Languages
+Set up the languages that we want to have available, e.g., so fontify
+works.
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babl-load-languages
+   '((python . t)
+     (emacs-lisp . t)
+     (ocaml . t)
+     (python . t)
+     (shell . t)
+    )
+) 
+(require 'tuareg)
+(require 'ocp-indent)
+#+END_SRC
 *** fontify buffers
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t)
+#+END_SRC
+*** Set up =C-c c=, notes file, and org-directory
+#+BEGIN_SRC emacs-lisp
+(setq org-directory "~/Dropbox/org-mode")
+(setq org-default-notes-file (concat org-directory "/notes.org"))
+(define-key global-map "\C-cc" 'org-capture)
+#+END_SRC
+*** Journal capture
+This template captures to a journal, e.g., for logging time.
+This was taken from
+[[http://sachachua.com/blog/2014/11/using-org-mode-keep-process-journal/]]
+
+#+BEGIN_SRC emacs-lisp
+(setq org-capture-templates
+      '(;; other entries
+        ("j" "Log entry" entry
+         (file+datetree+prompt "~/Dropbox/org-mode/journal.org")
+         "* %?\n Entered on %U\n %i\n %a")
+        ;; other entries
+        ))
+#+END_SRC
+
+Going through this:
+  - first we say this is a journal entry, and it's bound to =C-c c j=.
+  - The =file+datetree+prompt= keyword means that the entires will be
+    stored in =~/Dropbox/org-mode/journal.org=
+  - =%K= means link to the currently clocked task. 
+  - =%a= means annotation.
+  - =%i= means initial content, the region when capture is called
+    while the region is active. The entire text will be indented like
+    =%i= itself.
+  - =%?= after completing the template, position cursor here.
+
+** Set up theme
+My theme *still* doesn't load up right, even when this is last. Why?
+For now, I run emacs as =open -a Emacs.app --args -r= to run in
+reverse mode instead of using the theme. 
+
+#+BEGIN_SRC emacs-lisp
+(require 'powerline)
+(powerline-default-theme)
+;(load-theme 'reverse t)
 #+END_SRC
 
 * Some Reminders

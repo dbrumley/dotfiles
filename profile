@@ -21,11 +21,11 @@ export LIBRARY_PATH=/opt/local/lib
 export BAPCONFIGUREFLAGS="--prefix=`opam config var prefix` --enable-tests"
 
 # Common commands
-alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs"
 alias es='/Applications/Emacs.app/Contents/MacOS/Emacs --daemon'
 alias ec='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -n'
 export EDITOR='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c'
-alias emacs='open -a Emacs.app'
+#alias emacs='open -a Emacs.app --args -r'
+alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs -r"
 alias lmk='latexmk -pdf -pvc'
 
 # Auto-set the tab-name to the current dir.
@@ -34,6 +34,10 @@ function tab_title {
   echo -n -e "\033]0;${PWD##*/}\007"
 }
 PROMPT_COMMAND="tab_title ; $PROMPT_COMMAND"
+
+# Make bash have colors for directories
+export CLICOLOR=1
+export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
 
 
 # MacPorts Installer addition on 2015-04-05_at_11:27:40: adding an appropriate PATH variable for use with MacPorts.

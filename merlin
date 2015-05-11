@@ -10,3 +10,4 @@ PKG Re
 EXT ounit
 EXT here
 EXT nonrec
+PKG core
