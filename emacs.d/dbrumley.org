@@ -153,7 +153,8 @@ This function and setup installs some basic packages.
                       org-pandoc powerline
                       reverse-theme yaml-mode elpy
                       company-quickhelp gh-md
-                      auctex auctex-latexmk
+                      auctex auctex-latexmk auto-complete
+                      latex-preview-pane
                      ))
 
 (package-initialize)
@@ -416,6 +417,14 @@ didn't have to disable :)
 
         (add-to-list 'TeX-view-program-list '("skim-viewer" "%(skim) -o %(line-number) %(pdf-file-name) %(tex-file-name)"))
 
+        (add-to-list 'TeX-command-list 
+                     '("doc-view" "(lambda ()
+                 (let ((f \"%o\"))
+                   (find-file-other-window f)
+                   (doc-view-mode)))"
+                       TeX-run-function nil t))
+
+
         (setq TeX-view-program-selection '((output-pdf "skim-viewer")))
         ))
 
@@ -445,128 +454,6 @@ didn't have to disable :)
               ;; because Emacs treats SumatraPDF as an active process until SumatraPDF exits.
               (let ((major-mode 'latex-mode))
                 (TeX-command "Clean" 'TeX-master-file)))))))
-
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; LATEXMK START-PROCESS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  ;; (defun combined-latexmk-function ()
-  ;; (interactive)
-  ;;   (cond
-  ;;     ((eq system-type 'darwin)
-  ;;       (latexmk))
-  ;;     ((eq system-type 'windows-nt)
-  ;;       (xp-latexmk) )))
-
-  ;; (defun xp-latexmk ()
-  ;; ".latexmkrc contains the following entries:
-  ;;   $pdflatex = 'pdflatex -file-line-error -synctex=1 %O %S';
-  ;;   $pdf_mode = 1;
-  ;;   $recorder = 0;
-  ;;   $clean_ext = 'synctex.gz synctex.gz(busy) aux fdb_latexmk log';"
-  ;; (interactive)
-  ;;   (lexical-let* (
-  ;;       (latexmk-tex-file (buffer-file-name))
-  ;;       (latexmk-base-file (car (split-string (buffer-file-name) "\\.tex")))
-  ;;       (latexmk-w32-tex-file (concat "\"" (buffer-file-name) "\""))
-  ;;       (latexmk-w32-pdf-file (concat "\"" latexmk-base-file ".pdf" "\""))
-  ;;       (latexmk-line (format "%d" (line-number-at-pos)))
-  ;;       (latexmk-sumatra "c:/Program Files/SumatraPDF/SumatraPDF.exe")
-  ;;       (latexmk-w32-document (concat
-  ;;         "-reuse-instance"
-  ;;           " "
-  ;;         "-forward-search"
-  ;;           " "
-  ;;         latexmk-w32-tex-file
-  ;;           " "
-  ;;         latexmk-line
-  ;;           " "
-  ;;         latexmk-w32-pdf-file))
-  ;;       (latexmk-tex-output (concat "*" (file-name-nondirectory buffer-file-name) "*") )
-  ;;       (latexmk-pl "c:/texlive/2013/bin/win32/latexmk.exe")
-  ;;       (latexmk-latexmkrc "y:/.0.data/.0.emacs/.latexmkrc-nt") )
-  ;;     (if (buffer-modified-p)
-  ;;       (save-buffer))
-  ;;     (delete-other-windows)
-  ;;     (set-window-buffer (split-window-horizontally) (get-buffer-create latexmk-tex-output))
-  ;;     (with-current-buffer latexmk-tex-output (erase-buffer))
-  ;;     ;; `-reuse-instance` seems to be working very nicely, so no need to kill prior instance.
-  ;;     ;; (start-process "tskill" nil "c:/WINDOWS/system32/tskill.exe" "SumatraPDF")
-  ;;     (set-process-sentinel 
-  ;;       (start-process "deep-clean" nil latexmk-pl "-C" "-r" latexmk-latexmkrc latexmk-tex-file)
-  ;;       (lambda (p e) (when (= 0 (process-exit-status p))
-  ;;         (set-process-sentinel 
-  ;;           (start-process "compile" latexmk-tex-output latexmk-pl "-r" latexmk-latexmkrc latexmk-tex-file)
-  ;;           (lambda (p e) (when (= 0 (process-exit-status p))
-  ;;             (when (get-buffer-process (get-buffer latexmk-tex-output))
-  ;;               (process-kill-without-query (get-buffer-process
-  ;;                 (get-buffer latexmk-tex-output))))
-  ;;             (kill-buffer latexmk-tex-output)
-  ;;             (delete-other-windows)
-  ;;             (switch-to-buffer (get-file-buffer latexmk-tex-file))
-  ;;             (w32-shell-execute "open" latexmk-sumatra latexmk-w32-document)
-  ;;             (sit-for 1)
-  ;;             (start-process "clean" nil latexmk-pl "-c" "-r" latexmk-latexmkrc latexmk-tex-file)))))))))
-
-  ;; (defun latexmk-process-filter (proc string)
-  ;;   (let ((inhibit-read-only t))
-  ;;     (with-current-buffer (messages-buffer)
-  ;;       (goto-char (point-max))
-  ;;       (when (not (bolp))
-  ;;         (insert "\n"))
-  ;;       (insert string)
-  ;;       (when (not (bolp))
-  ;;         (insert "\n")))
-  ;;     (when (string-match "?" string)
-  ;;       (display-buffer (messages-buffer))
-  ;;       (with-current-buffer (messages-buffer)
-  ;;         (goto-char (point-max))
-  ;;         (walk-windows
-  ;;           (lambda (window)
-  ;;             (when (string-equal (buffer-name (window-buffer window)) "*Messages*")
-  ;;               (set-window-point window (point-max))))
-  ;;           nil t)))))
-
-  ;; (defun latexmk ()
-  ;;   ".latexmkrc contains the following entries (WITHOUT the four backslashes):
-  ;;   $pdflatex = 'pdflatex -file-line-error -synctex=1 %O %S && (cp \"%D\" \"%R.pdf\")';
-  ;;   $pdf_mode = 1;
-  ;;   $out_dir = '/tmp';"
-  ;; (interactive)
-  ;;   (lexical-let* (
-  ;;       (latexmk-tex-file buffer-file-name)
-  ;;       (latexmk-pdf-file (concat "/tmp/"
-  ;;         (car (split-string (file-name-nondirectory buffer-file-name) "\\.tex")) ".pdf"))
-  ;;       (latexmk-line (format "%d" (line-number-at-pos)))
-  ;;       (latexmk-skim "/Applications/Skim.app/Contents/SharedSupport/displayline")
-  ;;       (latexmk-pl "/usr/local/texlive/2012/texmf-dist/scripts/latexmk/latexmk.pl")
-  ;;       (latexmk-latexmkrc "/Users/HOME/.0.data/.0.emacs/.latexmkrc")
-  ;;       (latexmk-close-skim-window (concat
-  ;;         "set myWindowTitle to \"" (file-name-nondirectory latexmk-pdf-file) "\"\n"
-  ;;         "tell application \"System Events\"\n"
-  ;;         "tell application \"Skim\" to close (every window whose name contains myWindowTitle)\n"
-  ;;         "end tell")) )
-  ;;     (when (buffer-modified-p)
-  ;;       (save-buffer))
-  ;;     (when (not (one-window-p t))
-  ;;       (delete-other-windows))
-  ;;     (set-process-sentinel
-  ;;       (start-process "close-window" nil "osascript" "-e" latexmk-close-skim-window)
-  ;;       (lambda (p e) (when (= 0 (process-exit-status p))
-  ;;         (set-process-sentinel
-  ;;           (start-process "deep-clean" nil latexmk-pl "-C" "-r" latexmk-latexmkrc latexmk-tex-file)
-  ;;           (lambda (p e) (when (= 0 (process-exit-status p))
-  ;;             (when (get-process "compile")
-  ;;               (delete-process (get-process "compile")))
-  ;;             (start-process "compile" nil latexmk-pl "-r" latexmk-latexmkrc latexmk-tex-file)
-  ;;             (set-process-filter (get-process "compile") 'latexmk-process-filter)
-  ;;             (set-process-sentinel
-  ;;               (get-process "compile")
-  ;;               (lambda (p e) (when (= 0 (process-exit-status p))
-  ;;                 (set-process-sentinel
-  ;;                   (start-process "displayline" nil latexmk-skim latexmk-line latexmk-pdf-file latexmk-tex-file)
-  ;;                   (lambda (p e) (when (= 0 (process-exit-status p))
-  ;;                     (when (not (one-window-p t))
-  ;;                       (delete-other-windows))))))))))))))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #+END_SRC
