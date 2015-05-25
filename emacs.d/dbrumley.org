@@ -3,7 +3,6 @@
 
 * Configuration
 ** About this file
-
 This file is inspired by [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs Configuration]] using
 literate programming for her Emacs configuration. 
 
@@ -14,29 +13,20 @@ My =~/.emacs.d/init.el= file starts off simply:
 #+end_src
 
 The first line is needed to start up the package manager. The second
-says to load the rest from my org file. 
+says to load the rest from my org file. Note that the =:tangle no=
+says that the above line is *not* exported as source as this is just
+an example. Future lines will not have that directive.
 
 ** Personal information
+Set up my name and email address.  
+
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name "David Brumley"
       user-mail-address "dbrumley@cmu.edu")
 #+END_SRC
 
-** Basic configuration and initialization
-*** Add some additional repositories
-
-#+BEGIN_SRC emacs-lisp
-(setq package-archives
-      '(("gnu"         . "http://elpa.gnu.org/packages/")
-        ("org"         . "http://orgmode.org/elpa/")
-        ("melpa"       . "http://melpa.org/packages/")
-        ("marmalade"   . "http://marmalade-repo.org/packages/")))
-(package-initialize)
-#+END_SRC
-
-Use =M-x package-refresh-contents= to reload the list of packages
-after adding this the first time, and subsequent edits. 
-
+** Basic OS configuration 
+This section should only include OS-specific things.
 *** OS X behaviors
 According to the [[https://github.com/eschulte/emacs24-starter-kit/blob/master/starter-kit.org][starter kit]], there is a bug on OS X where system-name
 is FQDN.
@@ -67,14 +57,33 @@ The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.
 Among other things, this allows emacs to find ispell (aka aspell).
 Note that I'm putting =/opt/local/bin= before the normal system
 path on purpose. 
+
 #+BEGIN_SRC emacs-lisp
   (setq exec-path (append '("/opt/local/bin") exec-path))
+#+END_SRC
+
+** Initial Preferences
+*** bind =dbrumley.org= =d= register
+I bind a register key to =dbrumley.org= because I find myself editing
+it often.  I put this at the top because I want it available even if
+something else doesn't load.
+
+Reminder: to access this press =C-x r j= and press =d= at the
+prompt. I initially found this hard to remember until I figured out:
+  * =C-x= means execute in emacs
+  * =r= is register
+  * =j= is jump
+So overall I think of this as "execute the command register jump",
+which is very logical if you think about it. 
+
+#+BEGIN_SRC emacs-lisp
+  (set-register ?d (cons 'file "~/.emacs.d/dbrumley.org"))
 #+END_SRC
 *** Turn off splash screen
 #+BEGIN_SRC emacs-lisp
 (setq inhibit-splash-screen t) 
 #+END_SRC
-** Preferences
+
 *** Highlight matching parentheses
 #+BEGIN_SRC emacs-lisp
 (show-paren-mode 1)
@@ -104,12 +113,6 @@ path on purpose.
 #+BEGIN_SRC emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
-
-*** Turn on flyspell mode for text
-#+BEGIN_SRC emacs-lisp
-  (dolist (hook '(text-mode-hook))
-    (add-hook hook (lambda () (flyspell-mode 1))))
-#+END_SRC
 *** Use SSH by default for TRAMP
 #+BEGIN_SRC emacs-lisp
 (setq tramp-default-method "ssh")
@@ -123,97 +126,297 @@ path on purpose.
   (setq display-time-day-and-date t display-time-24hr-format t)
                (display-time)
 #+END_SRC
-** Packages
-*** Default packages to install if not already present
+** Basic Packages
+I put here more fundamental packages, with more programming-specific
+or involved configurations at the top level.
 
-This function and setup installs some basic packages.
-  * [[http://magit.vc][magit]] for git
-  * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
-    commands.
-  * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
-    the length of the editing window, e.g., to see when to create a
-    newline
-  * [[http://jblevins.org/projects/markdown-mode/][markdown-mode]] for markdown
-  * [[https://github.com/bbatsov/solarized-emacs][solarized-theme]] and [[https://github.com/kuanyui/moe-theme.el][moe-theme]], which are popular themes
-  * [[https://github.com/gempesaw/ido-vertical-mode.el][ido-vertical-mode]] for vertical ido completion
-  * [[http://www.jonnay.net/bloggity-blog/2014/12/29_making-org-mode-typography-suck-a-little-less.html][org-beautify-theme]] to make org-mode a little more beautiful
-  * [[https://github.com/steckerhalter/discover-my-major][discover-my-major]] since you should never stop learning shortcuts
-  * org-pandoc to export org using pandoc
-  * powerline
-  * reverse-theme
-  * yaml-mode
-  * gh-md: render markdown with the github api
+*** Add some additional repositories
+I currently do not have marmalade, as melpa and org mode
+typically are good enough for me. 
+#+BEGIN_SRC emacs-lisp
+(setq package-archives
+      '(("gnu"         . "http://elpa.gnu.org/packages/")
+        ("org"         . "http://orgmode.org/elpa/")
+        ("melpa"       . "http://melpa.org/packages/")))
+
+(require 'package)
+;;(setq package-enable-at-startup nil)
+(package-initialize)
+#+END_SRC
+
+Use =M-x package-refresh-contents= to reload the list of packages
+after adding this the first time, and subsequent edits. 
+
+*** =use-package= goodness
+I saw [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]'s configuration used this thing called [[https://github.com/jwiegley/use-package][use-package]],
+and am trying it out for managing my list of packages to install
+automatically.
+
+Others also seem to love it, including [[http://www.lunaryorn.com/2015/01/06/my-emacs-configuration-with-use-package.html][Sebastian Wiesner]]'s blog.
+
+I've already added melpa to my package list.  Here I am going to
+bootstrap directly with emacs built-in package manager first.
 
 #+BEGIN_SRC emacs-lisp
-(defvar mypackages '(magit smex  
-                      fill-column-indicator 
-                      markdown-mode moe-theme solarized-theme
-                      ido-vertical-mode org-beautify-theme
-                      discover-my-major
-                      org-pandoc powerline
-                      reverse-theme yaml-mode elpy
-                      company-quickhelp gh-md
-                      auctex auctex-latexmk auto-complete
-                      latex-preview-pane
-                     ))
+(require 'package)
+
 
 (package-initialize)
-(dolist (p mypackages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 #+END_SRC
 
-*** IDO
-*** Autocomplete
+According to the [[https://github.com/jwiegley/use-package][use-package github page]], the following will reduce
+startup time.
 #+BEGIN_SRC emacs-lisp
-(require 'auto-complete)
-#+END_SRC
-*** Enable IDO on all the things
-#+BEGIN_SRC emacs-lisp
-(require 'ido)
-(ido-mode t)
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
+(eval-when-compile
+  (require 'use-package))
+(require 'diminish)                ;; if you use :diminish
+(require 'bind-key)                ;; if you use any :bind variant
 #+END_SRC
 
-*** org-mode
+*** Set up visuals, including theme and fill column
+I expected this section to be bigger, but I don't really use themes
+much anymore. I use either the default theme, or run emacs in reverse
+mode (recommended by ivg!).
 
-Set up the default directory for org files:
-#+BEGIN_SRC emacs-lisp
-  (setq org-directory "~/Dropbox/org-mode")
-#+END_SRC
-*** Turn on ido-vertical
-#+BEGIN_SRC emacs-lisp
-(require 'ido-vertical-mode)
-(ido-mode 1)
-(ido-vertical-mode 1)
-(setq ido-vertical-count t)
-#+END_SRC
-*** Set up =C-h C-m= for discover-my-major
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-h C-m") 'discover-my-major)
-#+END_SRC
-** Load fill-column-indicator for visual feedback on EOL
-#+BEGIN_SRC emacs-lisp
-(require 'fill-column-indicator)
-(define-globalized-minor-mode
- global-fci-mode fci-mode (lambda () (fci-mode 1)))
-(global-fci-mode t)
-#+END_SRC
+I do set up a fill-column-indicator to set up a visual bar on the
+right of my screen showing the 80 column maximum. I like to remind
+(annoy?) my graduate students that 80 columns is the maximum. They, of
+course, don't like this an insist screens are bigger than this, and
+proceed to show me on their screen how big it is. 
 
-** YAML
+I insist on 80 columns for a few reasons:
+  1. 80 columns is really the maximum size you can print with a nice
+     monospace font.
+  2. I find it easier since I like split screens, and with 80 columns
+     I can put two windows side-by-side. 
+  3. It's standard in every editor. Why make the whole world
+     reconfigure to their personal preference?
 
-RAML is a markup language based on YAML. There is currently no RAML
-mode, but YAML is close enough.
-
+This will set it up as a global minor mode. 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.raml\\'" . yaml-mode))
-(add-to-list 'ac-modes 'yaml-mode)
+(use-package fill-column-indicator
+  :ensure t
+  :config
+  (progn
+     (define-globalized-minor-mode
+         global-fci-mode fci-mode (lambda () (fci-mode 1)))
+     (global-fci-mode t)
+  )
+)
 #+END_SRC
 
-And then load yaml
+
+I also currently use powerline, though I'm not sure really how useful
+it is.
 #+BEGIN_SRC emacs-lisp
-(require 'yaml-mode)
+(use-package powerline
+  :ensure t
+)
+#+END_SRC
+
+*** Set up magit
+I've started using magit as part of my emacs-is-my-os effort.  
+
+One question is whether to set magit-auto-revert-mode or not. The
+default is to set it, but there is an option to do:
+#+BEGIN_SRC emacs-lisp :tangle no
+  (setq magit-auto-revert-mode nil)
+#+END_SRC
+
+The warning message is quite scary, and says that if enabled (which is
+the default), you may have data loss. The [[https://github.com/magit/magit/issues/1783][author maintains]] that
+updating every time you do a git pull might be annoying. I'm going
+with his advice here; hope I'm not shooting myself in the foot.
+
+The below binds =C-x v d= to =magit-status=.  
+
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+  :ensure t
+  :init
+  ;; disable scary warning
+  (setq magit-last-seen-setup-instructions "1.4.0")
+  :bind (("C-x v d" . magit-status))
+)
+#+END_SRC
+
+*** Set up ido, and run it on all the things
+Currently I'm using ido mode.  I should try out helm (suppose to be
+better), but currently that is just a todo for me.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ido
+  :ensure t
+  :init
+  (progn
+    (ido-mode t)
+    (setq ido-enable-flex-matching t)
+    (setq ido-everywhere t)
+  )
+)
+#+END_SRC
+
+I also like to have the list of completions listed vertically, not
+horizontally. 
+#+BEGIN_SRC emacs-lisp
+(use-package ido-vertical-mode
+  :ensure t
+)
+#+END_SRC
+*** Set up company mode
+I use [[http://company-mode.github.io/][company mode]] for auto-completion.  Funny story: I thought
+company mode was some sort of corporate mode. It actually stands for
+"complete anything".  Note this is use by elpy for python, but I have
+it here since it works with most languages.  I also enable it globally
+via the config hook. 
+
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :ensure t
+  :config 
+   (add-hook 'after-init-hook 'global-company-mode)
+)
+(use-package company-quickhelp
+  :ensure t
+)
+#+END_SRC
+
+** Org mode
+Here are some useful references for org mode setup:
+  1) [[http://orgmode.org/worg/org-hacks.html][org mode hacks]].  A list of code snippets for org mode.
+  2) [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha's org mode]].  
+I don't use most of these, but keep the above references because they
+may be useful sometime.
+
+We use orgmode here, which should load in a good version. I also
+configure the default directory for org files. I use dropbox so I can
+have access to my org files on any computer.
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-plus-contrib
+  :ensure t
+  :config 
+    (progn
+    (setq org-modules
+              '(org-bbdb 
+                org-bibtex 
+                org-docview 
+                org-gnus 
+                org-info 
+                org-irc 
+                org-mhe 
+                org-rmail 
+                org-w3m
+                org-drill))
+     )
+)
+#+END_SRC
+
+
+Make sure org knows about all the languages we use
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babl-load-languages
+   '((python . t)
+     (emacs-lisp . t)
+     (ocaml . t)
+     (python . t)
+     (shell . t)
+    )
+) 
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package org-jekyll
+  :ensure t
+  :defer t
+  :pin melpa
+)
+(use-package org-pandoc
+  :ensure t
+  :pin melpa
+  :defer t
+)
+(setq org-modules
+              '(org-bbdb 
+                org-bibtex 
+                org-docview 
+                org-gnus 
+                org-info 
+                org-irc 
+                org-mhe 
+                org-rmail 
+                org-w3m
+                org-pandoc 
+                org-drill
+                org-jekyll))
+(require 'org)
+(eval-after-load 'org
+ '(org-load-modules-maybe t))
+(setq org-expiry-inactive-timestamps t)
+
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp :tangle no
+
+  :diminish org-mode
+(use-package org-plus-contrib
+  :ensure t
+  :diminish org-mode
+  :config
+    (progn
+    (setq org-directory "~/Dropbox/org-mode")
+    (setq org-modules
+              '(org-bbdb 
+                org-bibtex 
+                org-docview 
+                org-gnus 
+                org-info 
+                org-irc 
+                org-mhe 
+                org-rmail 
+                org-w3m 
+                org-drill
+                org-jekyll))
+     (setq org-src-fontify-natively t)
+    )
+)
+#+END_SRC
+
+Let's make sure we can use pandoc to export orgmode files. pandoc is
+extremely versatile, and can export to many different file formats.
+
+
+** Python
+I am a basic elpy user, and so far am quite happy with it. I use it
+with company-mode for providing quickhints, which provide pydoc
+documentation on autocomplete. 
+
+#+BEGIN_SRC emacs-lisp
+(use-package elpy
+  :ensure t
+  :config 
+    (elpy-enable)
+    (company-quickhelp-mode)
+)
+#+END_SRC
+
+Note that often I will want to edit a file that doesn't conform to
+pep8.  To disable flycheck (which calls pep8 and flake8) you should
+uncomment the following lines.  I wish the code I looked at was better
+and I didn't have to disable :)
+
+#+BEGIN_SRC emacs-lisp
+;(setq elpy-modules
+;    (quote
+;     (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
 #+END_SRC
 
 ** OCaml
@@ -221,155 +424,117 @@ Everything OCaml related is done out of opam, not the default emacs
 package sites. This was taken from the opam =user-setup= package and
 Ivan's configuration. 
 
-*** Set up the basic environment. 
+Note that to use a dynamically generated load path, we must inform the
+byte-compiler of the definition so that the value is available. See
+the [[https://github.com/jwiegley/use-package][use-package]] documentation.
+
+First, we define some utility functions that give us easy access to
+locations under our opam install directory.
 #+BEGIN_SRC emacs-lisp
-(add-hook 'tuareg-mode-hook 'set-ocaml-error-regexp)
-(add-hook 'ocaml-mode-hook 'set-ocaml-error-regexp)
-
-(defun opam-shell-command-to-string (command)
-  "Similar to shell-command-to-string, but returns nil unless the process
-  returned 0 (shell-command-to-string ignores return value)"
-  (let* ((return-value 0)
-         (return-string
-          (with-output-to-string
-            (setq return-value
-                  (with-current-buffer standard-output
-                    (process-file shell-file-name nil t nil
-                                  shell-command-switch command))))))
-    (if (= return-value 0) return-string nil)))
-
-(defun opam-update-env ()
-  "Update the environment to follow current OPAM switch configuration"
-  (interactive)
-  (let ((env (opam-shell-command-to-string "opam config env --sexp")))
-    (when env
-      (dolist (var (car (read-from-string env)))
-        (setenv (car var) (cadr var))
-        (when (string= (car var) "PATH")
-          (setq exec-path (split-string (cadr var) path-separator)))))))
-
-(opam-update-env)
-
-(setq opam-share
-  (let ((reply (opam-shell-command-to-string "opam config var share")))
-    (when reply (substring reply 0 -1))))
-#+END_SRC
-
-*** Make sure we load opam emacs files first.
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
-#+END_SRC
-
-*** opam installed tools automatic detection and initialization
-Note we set up merlin to easy mode. 
-
-#+BEGIN_SRC emacs-lisp
-  (defun opam-setup-tuareg ()
-    (add-to-list 'load-path (concat opam-share "/tuareg") t)
-    (load "tuareg-site-file"))
-
-  (defun opam-setup-ocp-indent ()
-    (require 'ocp-indent))
-
-  (defun opam-setup-ocp-index ()
-    (require 'ocp-index))
-
-  (defun opam-setup-merlin ()
-    (require 'merlin)
-    (add-hook 'tuareg-mode-hook 'merlin-mode t)
-    (add-hook 'caml-mode-hook 'merlin-mode t)
-    (set-default 'ocp-index-use-auto-complete nil)
-    (set-default 'merlin-use-auto-complete-mode 'easy)
-    ;; So you can do it on a mac, where `C-<up>` and `C-<down>` are used
-    ;; by spaces.
-    (define-key merlin-mode-map
-      (kbd "C-c <up>") 'merlin-type-enclosing-go-up)
-    (define-key merlin-mode-map
-      (kbd "C-c <down>") 'merlin-type-enclosing-go-down)
-    (set-face-background 'merlin-type-face "skyblue"))
-
-  (defun opam-setup-utop ()
-    (autoload 'utop "utop" "Toplevel for OCaml" t)
-    (autoload 'utop-setup-ocaml-buffer "utop" "Toplevel for OCaml" t)
-    (add-hook 'tuareg-mode-hook 'utop-setup-ocaml-buffer))
-
-  (setq opam-tools
-    '(("tuareg" . opam-setup-tuareg)
-      ("ocp-indent" . opam-setup-ocp-indent)
-      ("ocp-index" . opam-setup-ocp-index)
-      ("merlin" . opam-setup-merlin)
-      ("utop" . opam-setup-utop)))
-
-  (defun opam-detect-installed-tools ()
-    (let*
-        ((command "opam list --installed --short --safe --color=never")
-         (names (mapcar 'car opam-tools))
-         (command-string (mapconcat 'identity (cons command names) " "))
-         (reply (opam-shell-command-to-string command-string)))
-      (when reply (split-string reply))))
-
-  (setq opam-tools-installed (opam-detect-installed-tools))
-
-  (defun opam-auto-tools-setup ()
-    (interactive)
-    (dolist
-        (f (mapcar (lambda (x) (cdr (assoc x opam-tools))) opam-tools-installed))
-      (funcall (symbol-function f))))
-
-  (opam-auto-tools-setup)
-#+END_SRC
-
-*** =C-c c= for recompile
-
-#+BEGIN_SRC emacs-lisp
-(add-hook 'tuareg-mode-hook
-          (lambda () 
-            (merlin-mode)
-            (local-set-key (kbd "C-c c") 'recompile)
-            (local-set-key (kbd "C-c C-c") 'recompile)
-            (auto-fill-mode)))
-#+END_SRC
-*** Set up atdgen 
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.atd\\'" . tuareg-mode))
-#+END_SRC
-** Python
-
-I am a basic elpy user. Note that often I will want to edit a file
-that doesn't conform to pep8.  To disable all those annoying warnings,
-just turn off =flymake-mode=. For now I leave it on by default.
-
-
-First, enable elpy
-#+BEGIN_SRC emacs-lisp
-;(require 'elpy)
-(elpy-enable)
-#+END_SRC
-
-Then, enable quickhints, which provide pydoc documentation on
-autocomplete.
-#+BEGIN_SRC emacs-lisp
-(company-quickhelp-mode)
-#+END_SRC
-
-Disable flycheck because a lot of code I look at doesn't conform to
-pep8 or pass flake8. I wish the code I looked at was better and I
-didn't have to disable :)
-
-#+BEGIN_SRC emacs-lisp
-(setq elpy-modules
-    (quote
-     (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
+  (defun opam-share-path (path) 
+    (let ((opam-share-dir
+           (shell-command-to-string "echo -n `opam config var share`"))
+    ) (concat opam-share-dir "/" path))
+  )
+  
+  (defun opam-lib-path (path) 
+    (let ((opam-share-dir
+           (shell-command-to-string "echo -n `opam config var lib`")))
+      (concat opam-share-dir "/" path)
+    )
+  )
+  (defun opam-bin-path (path) 
+    (let ((opam-share-dir
+           (shell-command-to-string "echo -n `opam config var bin`")))
+      (concat opam-share-dir "/" path)))
 
 #+END_SRC
 
-# fix two key binding bugs in elpy. This is taken from [[https://www.youtube.com/watch?v%3D0kuCeS-mfyc][this tutorial
-# video]]. 
-# #+BEGIN_SRC emacs-lisp
-# (define-key yas-minor-mode-map (kbd "C-c k") 'yas-expand)
-# (define-key global-map (kbd "C-c o") 'iedit-mode)
-# #+END_SRC
+First, load up ocp-indent, as we should never be manually indenting.
+#+BEGIN_SRC emacs-lisp
+  (use-package ocp-indent
+    :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
+  )
+#+END_SRC
 
+Second, load up merlin.  We set some preferences:
+  * =tuareg-font-lock-symbols= gives us the fancy typeface where
+    functions have the lambda character, etc.
+  * =merlin-use-auto-complete-mode= makes auto-complete easy.
+  * =merlin-locate-preference= is set to prefer the mli file over the
+    ml file. 
+  * We enable using company as a backend for autocomplete. This should
+    have already been enabled globally, but why not have it here too
+    just to make sure.
+
+Note that on some systems =tuareg-font-lock-symbols= causes huge
+performance issues; if this happens just comment it out.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package merlin
+    :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
+    :config 
+      (progn
+        (load "tuareg-site-file")
+        (setq tuareg-font-lock-symbols t)
+        (setq merlin-use-auto-complete-mode 'easy)
+        (setq merlin-locate-preference 'mli)
+        ; Make company aware of merlin
+        (add-to-list 'company-backends 'merlin-company-backend)
+        ; Enable company on merlin managed buffers
+        (add-hook 'merlin-mode-hook 'company-mode)
+        ; use tuareg for atdgen files
+        (add-to-list 'auto-mode-alist '("\\.atd\\'" . tuareg-mode))
+       )   
+  )
+#+END_SRC
+
+*** Set up ott
+I install ott from =opam=, so I don't include it in the package
+manager.  Note that ott's emacs config needs a specialized path (which
+seems normal for opam for some reason). 
+
+#+BEGIN_SRC emacs-lisp 
+(use-package ottmode 
+  :load-path (lambda () (list (opam-share-path "/ott/emacs")))
+)
+#+END_SRC
+
+*** =bap.mli= register key is =b=
+I like to be able to quickly reference =bap.mli= from anywhere. I bind
+looking at this file currently to the =b= register.  Reminder: to
+access this press =C-x r j= and press =b= at the prompt.
+
+#+BEGIN_SRC emacs-lisp 
+(set-register ?b (cons 'file
+                         (opam-lib-path "/bap/bap.mli")))
+#+END_SRC
+
+** YAML and Markdown
+*** Markdown
+I use two markdown modules current: markdown-mode for editing, and the
+github markdown API for rendering via gh-md
+
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode
+  :ensure t
+)
+(use-package gh-md
+  :ensure t
+)
+#+END_SRC
+
+*** YAML and RAML
+RAML is a markup language based on YAML. There is currently no RAML
+mode, but YAML is close enough.
+
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode
+  :ensure t
+  :config 
+    (add-to-list 'auto-mode-alist '("\\.raml\\'" . yaml-mode))
+)
+#+END_SRC
 ** Latex/Docview setup
 *** Setup auctex basics
 #+BEGIN_SRC emacs-lisp
@@ -449,7 +614,7 @@ didn't have to disable :)
               (TeX-next-error t) )
             (when (= 0 (process-exit-status p))
               (delete-other-windows)
-              (TeX-command "View" 'TeX-active-master 0)
+              (TeX-command "doc-view" 'TeX-active-master 0)
               ;; `set-process-sentinel` cannot be used on Windows XP for post-view cleanup,
               ;; because Emacs treats SumatraPDF as an active process until SumatraPDF exits.
               (let ((major-mode 'latex-mode))
@@ -458,8 +623,13 @@ didn't have to disable :)
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #+END_SRC
 
-*** Use latexmk for compilation via C-c C-c.  
+*** Turn on reftex and set default bibliography
 
+#+BEGIN_SRC emacs-lisp
+(add-hook 'latex-mode-hook 'turn-on-reftex)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-default-bibliography '("DBrumley.bib"))
+#+END_SRC
 
 *** handy in-emacs pdf navigation
 In docview mode, creates key bindings so that =M-[= and =M-]= move forward
@@ -473,23 +643,16 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-[") 'doc-prev)
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
-*** Set up resolution for doc-view
-The goal was for retina display to work inside emacs. Unfortunately it
-doesn't seem to work below. I guess I'll use an external display :(
-#+BEGIN_SRC emacs-lisp
-;(setq doc-view-resolution 300)
-#+END_SRC
 
-
-** Org-mode
+** Old Org-mode
 *** Load up org mode
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (require 'org)
 #+END_SRC
 *** Submodules
 Org has a bunch of possible modules.  These are some ones that look
 interesting.
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (setq org-modules '(org-drill
                      org-habit
                      org-jekyll
@@ -501,7 +664,7 @@ interesting.
 *** Languages
 Set up the languages that we want to have available, e.g., so fontify
 works.
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (org-babel-do-load-languages
  'org-babl-load-languages
    '((python . t)
@@ -515,11 +678,11 @@ works.
 (require 'ocp-indent)
 #+END_SRC
 *** fontify buffers
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (setq org-src-fontify-natively t)
 #+END_SRC
 *** Set up =C-c c=, notes file, and org-directory
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (setq org-directory "~/Dropbox/org-mode")
 (setq org-default-notes-file (concat org-directory "/notes.org"))
 (define-key global-map "\C-cc" 'org-capture)
@@ -529,7 +692,7 @@ This template captures to a journal, e.g., for logging time.
 This was taken from
 [[http://sachachua.com/blog/2014/11/using-org-mode-keep-process-journal/]]
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (setq org-capture-templates
       '(;; other entries
         ("j" "Log entry" entry
@@ -550,16 +713,145 @@ Going through this:
     =%i= itself.
   - =%?= after completing the template, position cursor here.
 
-** Set up theme
-My theme *still* doesn't load up right, even when this is last. Why?
-For now, I run emacs as =open -a Emacs.app --args -r= to run in
-reverse mode instead of using the theme. 
+** Old Stuff
+*** OCaml Old Stuff
+Some old stuff I don't use but wanted to keep around for reference.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+
+  ;; (add-to-list 'load-path (opam-path "emacs/site-lisp"))
+  ;; (add-to-list 'load-path (opam-path "tuareg"))
+
+  ;; (load "tuareg-site-file")
+  ;; (require 'ocp-indent)
+  ;; (require 'merlin)
+
+  ;; ;; uncomment the following for fancy greek letters
+  ;; ; (setq tuareg-font-lock-symbols t)
+  ;; (setq merlin-use-auto-complete-mode 'easy)
+  ;; (setq merlin-locate-preference 'mli)
+
+  ;; (add-hook 'tuareg-mode-hook
+  ;;           (lambda () 
+  ;;             (merlin-mode)
+  ;;             (local-set-key (kbd "C-c c") 'recompile)
+  ;;             (local-set-key (kbd "C-c C-c") 'recompile)
+  ;;             ; workaround for https://github.com/ocaml/tuareg/issues/45
+  ;;             (tuareg-make-indentation-regexps)
+  ;;             (auto-fill-mode)))
+
+  ;; (defun opam-env ()
+  ;;   (interactive nil)
+  ;;   (dolist (var
+  ;;            (car (read-from-string
+  ;;                  (shell-command-to-string "opam config env --sexp"))))
+  ;;     (setenv (car var) (cadr var))))
+
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(add-hook 'tuareg-mode-hook
+          (lambda () 
+            (merlin-mode)
+            (local-set-key (kbd "C-c c") 'recompile)
+            (local-set-key (kbd "C-c C-c") 'recompile)
+            (auto-fill-mode)))
+#+END_SRC
+
+*** Default packages to install if not already present
+
+This function and setup installs some basic packages.
+  * [[http://magit.vc][magit]] for git
+  * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
+    commands.
+  * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
+    the length of the editing window, e.g., to see when to create a
+    newline
+  * [[http://jblevins.org/projects/markdown-mode/][markdown-mode]] for markdown
+  * [[https://github.com/bbatsov/solarized-emacs][solarized-theme]] and [[https://github.com/kuanyui/moe-theme.el][moe-theme]], which are popular themes
+  * [[https://github.com/gempesaw/ido-vertical-mode.el][ido-vertical-mode]] for vertical ido completion
+  * [[http://www.jonnay.net/bloggity-blog/2014/12/29_making-org-mode-typography-suck-a-little-less.html][org-beautify-theme]] to make org-mode a little more beautiful
+  * [[https://github.com/steckerhalter/discover-my-major][discover-my-major]] since you should never stop learning shortcuts
+  * org-pandoc to export org using pandoc
+  * powerline
+  * reverse-theme
+  * yaml-mode
+  * gh-md: render markdown with the github api
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(defvar mypackages '(smex  
+                      markdown-mode 
+                      discover-my-major
+                      reverse-theme yaml-mode
+                      gh-md
+                      auctex auctex-latexmk auto-complete
+                      latex-preview-pane
+                     ))
+
+(package-initialize)
+(dolist (p mypackages)
+  (when (not (package-installed-p p))
+    (package-install p)))
+#+END_SRC
+
+*** Autocomplete
+#+BEGIN_SRC emacs-lisp :tangle no
+(require 'auto-complete)
+#+END_SRC
+
+*** Turn on ido-vertical
+#+BEGIN_SRC emacs-lisp :tangle no
+(require 'ido-vertical-mode)
+(ido-mode 1)
+(ido-vertical-mode 1)
+(setq ido-vertical-count t)
+#+END_SRC
+*** smartparen all the things
+#+BEGIN_SRC emacs-lisp :tangle no
+(require 'smartparens-config)
+#+END_SRC
+
+
+** Shortcuts and Registers
+
+
+*** Registers
+I use registers to open up specific files (I'm saving shortcuts for
+keyboard macros).  While surely an old idea, I'm trying to template
+after [[http://sachachua.com/blog/2015/02/learn-take-notes-efficiently-org-mode/][Sacha Chua]]'s emacs here.
+
+*** Bind goto-line
+Even though line numbers are "evil", I like them. Usually goto-line is
+M-g M-g, but here I make it C-c C-g since that is usually not bound
+anyway by default and control is easier for me to go to than escape.
 
 #+BEGIN_SRC emacs-lisp
-(require 'powerline)
-(powerline-default-theme)
-;(load-theme 'reverse t)
+(global-set-key (kbd "C-c C-g") 'goto-line)
 #+END_SRC
+
+#+RESULTS:
+: goto-line
+
+*** Set up =C-h C-m= for discover-my-major
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-h C-m") 'discover-my-major)
+#+END_SRC
+
+** TODO Turn on flyspell mode for text
+#+BEGIN_SRC emacs-lisp
+  (dolist (hook '(text-mode-hook))
+    (add-hook hook (lambda () (flyspell-mode 1))))
+#+END_SRC
+
+* TODO
+** TODO Try out helm 
+** TODO Investigate load errors in dbrumley.org
+These two warnings:
+Could not load company-mode
+Could not load org-pandoc
+
+** TODO Investigate smartparens for ocaml editing
+See https://github.com/Fuco1/smartparens/wiki/Quick-tour
 
 * Some Reminders
 ** Evaluate lisp statements
