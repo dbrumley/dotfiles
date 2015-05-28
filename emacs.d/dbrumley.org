@@ -9,13 +9,23 @@ literate programming for her Emacs configuration.
 My =~/.emacs.d/init.el= file starts off simply:
 #+begin_src emacs-lisp :tangle no
 (require 'package)
+(add-to-list 'load-path "~/.emacs.d/elisp/org-mode/lisp")
+(add-to-list 'load-path "~/.emacs.d/elisp/org-mode/contrib/lisp" t)
 (org-babel-load-file "~/.emacs.d/dbrumley.org")
 #+end_src
 
-The first line is needed to start up the package manager. The second
-says to load the rest from my org file. Note that the =:tangle no=
-says that the above line is *not* exported as source as this is just
-an example. Future lines will not have that directive.
+The first line is needed to start up the package manager. 
+
+The second and third make sure I use the git-installed orgmode.  I use
+the git version.  (I've not figured out how to use the
+org-plus-contrib from melpa so that I could a) use use-package, b) use
+the contrib packages.  I worked hours on this; I don't know
+why it wasn't working.)
+
+
+The fourth says to load the rest from my org file. Note that the
+=:tangle no= says that the above line is *not* exported as source as
+this is just an example. Future lines will not have that directive.
 
 ** Personal information
 Set up my name and email address.  
@@ -287,22 +297,38 @@ via the config hook.
 #+END_SRC
 
 ** Org mode
-Here are some useful references for org mode setup:
-  1) [[http://orgmode.org/worg/org-hacks.html][org mode hacks]].  A list of code snippets for org mode.
-  2) [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha's org mode]].  
-I don't use most of these, but keep the above references because they
-may be useful sometime.
 
-We use orgmode here, which should load in a good version. I also
-configure the default directory for org files. I use dropbox so I can
-have access to my org files on any computer.
+I use org-mode checked out from git. I don't use melpa because I want
+to play around with org-contrib, and I could never get
+org-plus-contrib to work and load properly.
+
+The following loads org, and sets up the modules I plan to play around
+with. Note I've only gotten this to work with a fresh checkout of
+orgmode as:
+#+BEGIN_SRC shell :tangle no
+$ git clone git://orgmode.org/org-mode.git
+$ <edit org-mode/local.mk> 
+$ make autoloads
+#+END_SRC
+
+The edit to =org-mode/local.mk= is to make sure the correct emacs is
+chosen (by default it uses the default OSX one instead of the one I
+installed).
+
+
+Then I've added to my =init.el= the following to make sure the new
+orgmode is used instead of the built-in:
+#+BEGIN_SRC emacs-lisp :tangle no
+     (add-to-list 'load-path "~/path/to/orgdir/lisp")
+     (add-to-list 'load-path "~/path/to/orgdir/contrib/lisp" t)
+
+#+END_SRC
+
+Finally, we start real configure. First, I load in some contrib's I'm
+playing with.
 
 #+BEGIN_SRC emacs-lisp
-(use-package org-plus-contrib
-  :ensure t
-  :config 
-    (progn
-    (setq org-modules
+(setq org-modules
               '(org-bbdb 
                 org-bibtex 
                 org-docview 
@@ -313,10 +339,16 @@ have access to my org files on any computer.
                 org-rmail 
                 org-w3m
                 org-drill))
-     )
-)
+(eval-after-load 'org
+ '(org-load-modules-maybe t))
+
 #+END_SRC
 
+And fontify the buffers and set the default org directory:
+#+BEGIN_SRC emacs-lisp
+(setq org-src-fontify-natively t)
+(setq org-directory "~/Dropbox/org-mode")
+#+END_SRC
 
 Make sure org knows about all the languages we use
 #+BEGIN_SRC emacs-lisp
@@ -331,68 +363,13 @@ Make sure org knows about all the languages we use
 ) 
 #+END_SRC
 
+*** Org references
 
-#+BEGIN_SRC emacs-lisp :tangle no
-(use-package org-jekyll
-  :ensure t
-  :defer t
-  :pin melpa
-)
-(use-package org-pandoc
-  :ensure t
-  :pin melpa
-  :defer t
-)
-(setq org-modules
-              '(org-bbdb 
-                org-bibtex 
-                org-docview 
-                org-gnus 
-                org-info 
-                org-irc 
-                org-mhe 
-                org-rmail 
-                org-w3m
-                org-pandoc 
-                org-drill
-                org-jekyll))
-(require 'org)
-(eval-after-load 'org
- '(org-load-modules-maybe t))
-(setq org-expiry-inactive-timestamps t)
-
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp :tangle no
-
-  :diminish org-mode
-(use-package org-plus-contrib
-  :ensure t
-  :diminish org-mode
-  :config
-    (progn
-    (setq org-directory "~/Dropbox/org-mode")
-    (setq org-modules
-              '(org-bbdb 
-                org-bibtex 
-                org-docview 
-                org-gnus 
-                org-info 
-                org-irc 
-                org-mhe 
-                org-rmail 
-                org-w3m 
-                org-drill
-                org-jekyll))
-     (setq org-src-fontify-natively t)
-    )
-)
-#+END_SRC
-
-Let's make sure we can use pandoc to export orgmode files. pandoc is
-extremely versatile, and can export to many different file formats.
-
+Here are some useful references for org mode setup:
+  1) [[http://orgmode.org/worg/org-hacks.html][org mode hacks]].  A list of code snippets for org mode.
+  2) [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha's org mode]].  
+I don't use most of these, but keep the above references because they
+may be useful sometime.
 
 ** Python
 I am a basic elpy user, and so far am quite happy with it. I use it
@@ -845,7 +822,7 @@ anyway by default and control is easier for me to go to than escape.
 
 * TODO
 ** TODO Try out helm 
-** TODO Investigate load errors in dbrumley.org
+** DONE Investigate load errors in dbrumley.org
 These two warnings:
 Could not load company-mode
 Could not load org-pandoc
