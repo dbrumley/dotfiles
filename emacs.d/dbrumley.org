@@ -296,6 +296,36 @@ via the config hook.
 )
 #+END_SRC
 
+*** Discover my major
+*** smex, smartparen, and discover-my-major
+
+#+BEGIN_SRC emacs-lisp
+(use-package smex
+  :ensure t
+  :bind ("M-x" . smex)
+)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp 
+  (use-package smartparens
+    :ensure t
+    :diminish smartparens-mode
+    :config  
+    (progn
+       (require 'smartparens-config)
+       (smartparens-global-mode 1)
+    )
+  )
+#+END_SRC
+
+In any mode =C-h C-m= will show a list of key bindings.
+#+BEGIN_SRC emacs-lisp
+(use-package discover-my-major
+  :ensure t
+)
+(global-set-key (kbd "C-h C-m") 'discover-my-major)
+#+END_SRC
+
 ** Org mode
 
 I use org-mode checked out from git. I don't use melpa because I want
@@ -319,9 +349,8 @@ installed).
 Then I've added to my =init.el= the following to make sure the new
 orgmode is used instead of the built-in:
 #+BEGIN_SRC emacs-lisp :tangle no
-     (add-to-list 'load-path "~/path/to/orgdir/lisp")
-     (add-to-list 'load-path "~/path/to/orgdir/contrib/lisp" t)
-
+(add-to-list 'load-path "~/path/to/orgdir/lisp")
+(add-to-list 'load-path "~/path/to/orgdir/contrib/lisp" t)
 #+END_SRC
 
 Finally, we start real configure. First, I load in some contrib's I'm
@@ -341,14 +370,19 @@ playing with.
                 org-drill))
 (eval-after-load 'org
  '(org-load-modules-maybe t))
-
 #+END_SRC
 
 And fontify the buffers and set the default org directory:
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t)
+#+END_SRC
+
+Set up our default directory and default org capture.
+
+#+BEGIN_SRC emacs-lisp
 (setq org-directory "~/Dropbox/org-mode")
 #+END_SRC
+
 
 Make sure org knows about all the languages we use
 #+BEGIN_SRC emacs-lisp
@@ -362,6 +396,41 @@ Make sure org knows about all the languages we use
     )
 ) 
 #+END_SRC
+
+**** Org Journal and capture
+
+Set up default notes directory for random things.
+#+BEGIN_SRC emacs-lisp
+(setq org-default-notes-file (concat org-directory "/notes.org"))
+(define-key global-map "\C-cc" 'org-capture)
+#+END_SRC
+
+
+This template captures to a journal, e.g., for logging time.
+This was taken from
+[[http://sachachua.com/blog/2014/11/using-org-mode-keep-process-journal/]]
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(setq org-capture-templates
+      '(;; other entries
+        ("j" "Log entry" entry
+         (file+datetree+prompt "~/Dropbox/org-mode/journal.org")
+         "* %?\n Entered on %U\n %i\n %a")
+        ;; other entries
+        ))
+#+END_SRC
+
+Going through this:
+  - first we say this is a journal entry, and it's bound to =C-c c j=.
+  - The =file+datetree+prompt= keyword means that the entires will be
+    stored in =~/Dropbox/org-mode/journal.org=
+  - =%K= means link to the currently clocked task. 
+  - =%a= means annotation.
+  - =%i= means initial content, the region when capture is called
+    while the region is active. The entire text will be indented like
+    =%i= itself.
+  - =%?= after completing the template, position cursor here.
+
 
 *** Org references
 
@@ -513,6 +582,19 @@ mode, but YAML is close enough.
 )
 #+END_SRC
 ** Latex/Docview setup
+*** Install packages
+#+BEGIN_SRC emacs-lisp
+  (use-package auctex
+    :ensure t
+  )
+  ;; (use-package auctex-latexmk
+  ;;   :ensure auxtex
+  ;; )
+  ;; (use-package latex-preview-pane
+  ;;   :ensure auxtex
+  ;; )
+#+END_SRC
+
 *** Setup auctex basics
 #+BEGIN_SRC emacs-lisp
 
@@ -621,75 +703,6 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
 
-** Old Org-mode
-*** Load up org mode
-#+BEGIN_SRC emacs-lisp :tangle no
-(require 'org)
-#+END_SRC
-*** Submodules
-Org has a bunch of possible modules.  These are some ones that look
-interesting.
-#+BEGIN_SRC emacs-lisp :tangle no
-(setq org-modules '(org-drill
-                     org-habit
-                     org-jekyll
-                    ))
-(eval-after-load 'org
- '(org-load-modules-maybe t))
-(setq org-expiry-inactive-timestamps t)
-#+END_SRC
-*** Languages
-Set up the languages that we want to have available, e.g., so fontify
-works.
-#+BEGIN_SRC emacs-lisp :tangle no
-(org-babel-do-load-languages
- 'org-babl-load-languages
-   '((python . t)
-     (emacs-lisp . t)
-     (ocaml . t)
-     (python . t)
-     (shell . t)
-    )
-) 
-(require 'tuareg)
-(require 'ocp-indent)
-#+END_SRC
-*** fontify buffers
-#+BEGIN_SRC emacs-lisp :tangle no
-(setq org-src-fontify-natively t)
-#+END_SRC
-*** Set up =C-c c=, notes file, and org-directory
-#+BEGIN_SRC emacs-lisp :tangle no
-(setq org-directory "~/Dropbox/org-mode")
-(setq org-default-notes-file (concat org-directory "/notes.org"))
-(define-key global-map "\C-cc" 'org-capture)
-#+END_SRC
-*** Journal capture
-This template captures to a journal, e.g., for logging time.
-This was taken from
-[[http://sachachua.com/blog/2014/11/using-org-mode-keep-process-journal/]]
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(setq org-capture-templates
-      '(;; other entries
-        ("j" "Log entry" entry
-         (file+datetree+prompt "~/Dropbox/org-mode/journal.org")
-         "* %?\n Entered on %U\n %i\n %a")
-        ;; other entries
-        ))
-#+END_SRC
-
-Going through this:
-  - first we say this is a journal entry, and it's bound to =C-c c j=.
-  - The =file+datetree+prompt= keyword means that the entires will be
-    stored in =~/Dropbox/org-mode/journal.org=
-  - =%K= means link to the currently clocked task. 
-  - =%a= means annotation.
-  - =%i= means initial content, the region when capture is called
-    while the region is active. The entire text will be indented like
-    =%i= itself.
-  - =%?= after completing the template, position cursor here.
-
 ** Old Stuff
 *** OCaml Old Stuff
 Some old stuff I don't use but wanted to keep around for reference.
@@ -757,12 +770,8 @@ This function and setup installs some basic packages.
 
 #+BEGIN_SRC emacs-lisp :tangle no
 (defvar mypackages '(smex  
-                      markdown-mode 
                       discover-my-major
                       reverse-theme yaml-mode
-                      gh-md
-                      auctex auctex-latexmk auto-complete
-                      latex-preview-pane
                      ))
 
 (package-initialize)
