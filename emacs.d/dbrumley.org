@@ -583,16 +583,22 @@ mode, but YAML is close enough.
 #+END_SRC
 ** Latex/Docview setup
 *** Install packages
+
+One thing that took me awhile to figure out is that the package auctex
+is not called auctex.  [[http://superuser.com/questions/737835/cannot-run-auctex-on-emacs][One post]] suggests to require =tex=, while the
+=use-package= documents suggest =tex-site=.  I do the latter, and it
+seems to work.
+
 #+BEGIN_SRC emacs-lisp
-  (use-package auctex
+  (use-package tex-site
+    :ensure auctex
+  )
+  (use-package auctex-latexmk
     :ensure t
   )
-  ;; (use-package auctex-latexmk
-  ;;   :ensure auxtex
-  ;; )
-  ;; (use-package latex-preview-pane
-  ;;   :ensure auxtex
-  ;; )
+  (use-package latex-preview-pane
+    :ensure t
+  )
 #+END_SRC
 
 *** Setup auctex basics
