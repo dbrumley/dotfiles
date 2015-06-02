@@ -21,11 +21,22 @@ export LIBRARY_PATH=/opt/local/lib
 export BAPCONFIGUREFLAGS="--prefix=`opam config var prefix` --enable-tests"
 
 # Common commands
-alias es='/Applications/Emacs.app/Contents/MacOS/Emacs --daemon'
-alias ec='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -n'
-export EDITOR='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c'
+export MYEMACSDIR="/Applications/Emacs.app/Contents/MacOS"
+alias es="${MYEMACSDIR}/Emacs --daemon"
+alias ec="${MYEMACSDIR}/bin/emacsclient -c -n"
+alias ecr="${MYEMACSDIR}/bin/emacsclient -c -n -r"
+alias emacs="${MYEMACSDIR}/Emacs"
+alias emacsr="${MYEMACSDIR}/Emacs -r"
+
+#alias es='/Applications/Emacs.app/Contents/MacOS/Emacs --daemon'
+#alias ec='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c -n'
+#export EDITOR='/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c'
 #alias emacs='open -a Emacs.app --args -r'
-alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs -r"
+#alias emacs="/Applications/MacPorts/EmacsMac.app/Contents/MacOS/Emacs -r"
+#alias es="/Applications/MacPorts/EmacsMac.app/Contents/MacOS/Emacs --daemon"
+#alias ec="/Applications/MacPorts/EmacsMac.app/Contents/MacOS/bin/emacsclient -c"
+#alias emacsr="/Applications/MacPorts/EmacsMac.app/Contents/MacOS/Emacs -r"
+#alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs -r"
 alias lmk='latexmk -pdf -pvc'
 
 # Auto-set the tab-name to the current dir.

@@ -326,11 +326,26 @@ In any mode =C-h C-m= will show a list of key bindings.
 (global-set-key (kbd "C-h C-m") 'discover-my-major)
 #+END_SRC
 
+*** define-word
+Define word at point will define a word...at the current point.
+
+#+BEGIN_SRC emacs-lisp
+(use-package define-word
+  :ensure t
+  :config
+  (progn
+    (global-set-key (kbd "C-c d") 'define-word-at-point)
+    (global-set-key (kbd "C-c D") 'define-word)
+  )
+)
+#+END_SRC
+
 ** Org mode
 
 I use org-mode checked out from git. I don't use melpa because I want
 to play around with org-contrib, and I could never get
-org-plus-contrib to work and load properly.
+org-plus-contrib to work and load properly.  Since we have to load
+org-mode first, I don't use =use-package= to configure.
 
 The following loads org, and sets up the modules I plan to play around
 with. Note I've only gotten this to work with a fresh checkout of
@@ -377,6 +392,14 @@ And fontify the buffers and set the default org directory:
 (setq org-src-fontify-natively t)
 #+END_SRC
 
+And set up a register key to go to my journal (j)
+#+BEGIN_SRC emacs-lisp
+  (set-register ?j (cons 'file "~/Dropbox/org-mode/journal.org"))
+#+END_SRC
+
+
+
+*** Org Journal and Capture
 Set up our default directory and default org capture.
 
 #+BEGIN_SRC emacs-lisp
@@ -387,7 +410,7 @@ Set up our default directory and default org capture.
 Make sure org knows about all the languages we use
 #+BEGIN_SRC emacs-lisp
 (org-babel-do-load-languages
- 'org-babl-load-languages
+ 'org-babel-load-languages
    '((python . t)
      (emacs-lisp . t)
      (ocaml . t)
@@ -396,8 +419,6 @@ Make sure org knows about all the languages we use
     )
 ) 
 #+END_SRC
-
-**** Org Journal and capture
 
 Set up default notes directory for random things.
 #+BEGIN_SRC emacs-lisp
@@ -410,17 +431,26 @@ This template captures to a journal, e.g., for logging time.
 This was taken from
 [[http://sachachua.com/blog/2014/11/using-org-mode-keep-process-journal/]]
 
-#+BEGIN_SRC emacs-lisp :tangle no
+These are our templates for capturing things quickly. To invoke
+org-capture, type =C-c c=
+
+#+BEGIN_SRC emacs-lisp 
 (setq org-capture-templates
-      '(;; other entries
-        ("j" "Log entry" entry
+      '(("j" "Log entry" entry
          (file+datetree+prompt "~/Dropbox/org-mode/journal.org")
-         "* %?\n Entered on %U\n %i\n %a")
+         "* %?\n Entered on %U\n %i\n %a"
+        )
+        ("w" "Weekly goal entry" entry
+         (file+headline "~/Dropbox/org-mode/journal.org" "Weekly Goals")
+         "* Weekly goal for [%<%Y-%m-%d>]"
         ;; other entries
-        ))
+        )
+       )
+)
+
 #+END_SRC
 
-Going through this:
+Let's look at the first one for journal:
   - first we say this is a journal entry, and it's bound to =C-c c j=.
   - The =file+datetree+prompt= keyword means that the entires will be
     stored in =~/Dropbox/org-mode/journal.org=
@@ -432,13 +462,45 @@ Going through this:
   - =%?= after completing the template, position cursor here.
 
 
-*** Org references
+*** Org agenda and TODO
 
-Here are some useful references for org mode setup:
-  1) [[http://orgmode.org/worg/org-hacks.html][org mode hacks]].  A list of code snippets for org mode.
-  2) [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha's org mode]].  
-I don't use most of these, but keep the above references because they
-may be useful sometime.
+Tell orgmode which files to look for agenda's in.
+#+BEGIN_SRC emacs-lisp
+(setq org-agenda-files
+      (delq nil
+            (mapcar (lambda (x) (and (file-exists-p x) x))
+                    '("~/Dropbox/org-mode/journal.org"
+))))
+#+END_SRC
+
+Set up orgmode to log the time when something is completed
+#+BEGIN_SRC emacs-lisp
+(setq org-log-done t)
+#+END_SRC
+
+Set up some global key maps
+#+BEGIN_SRC emacs-lisp
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+#+END_SRC
+
+A more gtd-ish workflow, including when something is delegated.
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keywords
+ '((sequence
+    "TODO(t)"  ; next action
+    "STARTED(s)"
+    "DELEGATED(d)"
+    "WAITING(w@/!)"
+    "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
+#+END_SRC
+
+And set up a nice color for delegated
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keyword-faces
+        '(("DELEGATED" . (:foreground "cyan" :weight bold))))
+#+END_SRC
+
 
 ** Python
 I am a basic elpy user, and so far am quite happy with it. I use it
@@ -531,6 +593,17 @@ performance issues; if this happens just comment it out.
         (add-hook 'merlin-mode-hook 'company-mode)
         ; use tuareg for atdgen files
         (add-to-list 'auto-mode-alist '("\\.atd\\'" . tuareg-mode))
+        ; Turn on merlin for ocaml
+        (add-hook 'tuareg-mode-hook
+          (lambda () 
+            (merlin-mode)
+            (local-set-key (kbd "C-c c") 'recompile)
+            (local-set-key (kbd "C-c C-c") 'recompile)
+            ; workaround for https://github.com/ocaml/tuareg/issues/45
+            (tuareg-make-indentation-regexps)
+            (auto-fill-mode))
+            )
+             
        )   
   )
 #+END_SRC
@@ -709,100 +782,6 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
 
-** Old Stuff
-*** OCaml Old Stuff
-Some old stuff I don't use but wanted to keep around for reference.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-
-  ;; (add-to-list 'load-path (opam-path "emacs/site-lisp"))
-  ;; (add-to-list 'load-path (opam-path "tuareg"))
-
-  ;; (load "tuareg-site-file")
-  ;; (require 'ocp-indent)
-  ;; (require 'merlin)
-
-  ;; ;; uncomment the following for fancy greek letters
-  ;; ; (setq tuareg-font-lock-symbols t)
-  ;; (setq merlin-use-auto-complete-mode 'easy)
-  ;; (setq merlin-locate-preference 'mli)
-
-  ;; (add-hook 'tuareg-mode-hook
-  ;;           (lambda () 
-  ;;             (merlin-mode)
-  ;;             (local-set-key (kbd "C-c c") 'recompile)
-  ;;             (local-set-key (kbd "C-c C-c") 'recompile)
-  ;;             ; workaround for https://github.com/ocaml/tuareg/issues/45
-  ;;             (tuareg-make-indentation-regexps)
-  ;;             (auto-fill-mode)))
-
-  ;; (defun opam-env ()
-  ;;   (interactive nil)
-  ;;   (dolist (var
-  ;;            (car (read-from-string
-  ;;                  (shell-command-to-string "opam config env --sexp"))))
-  ;;     (setenv (car var) (cadr var))))
-
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(add-hook 'tuareg-mode-hook
-          (lambda () 
-            (merlin-mode)
-            (local-set-key (kbd "C-c c") 'recompile)
-            (local-set-key (kbd "C-c C-c") 'recompile)
-            (auto-fill-mode)))
-#+END_SRC
-
-*** Default packages to install if not already present
-
-This function and setup installs some basic packages.
-  * [[http://magit.vc][magit]] for git
-  * [[https://github.com/nonsequitur/smex][smex]] which provides feedback on recently and most frequently used
-    commands.
-  * [[http://www.emacswiki.org/emacs/FillColumnIndicator][fill-column-indicator]] which provides draws a thin line marker down
-    the length of the editing window, e.g., to see when to create a
-    newline
-  * [[http://jblevins.org/projects/markdown-mode/][markdown-mode]] for markdown
-  * [[https://github.com/bbatsov/solarized-emacs][solarized-theme]] and [[https://github.com/kuanyui/moe-theme.el][moe-theme]], which are popular themes
-  * [[https://github.com/gempesaw/ido-vertical-mode.el][ido-vertical-mode]] for vertical ido completion
-  * [[http://www.jonnay.net/bloggity-blog/2014/12/29_making-org-mode-typography-suck-a-little-less.html][org-beautify-theme]] to make org-mode a little more beautiful
-  * [[https://github.com/steckerhalter/discover-my-major][discover-my-major]] since you should never stop learning shortcuts
-  * org-pandoc to export org using pandoc
-  * powerline
-  * reverse-theme
-  * yaml-mode
-  * gh-md: render markdown with the github api
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(defvar mypackages '(smex  
-                      discover-my-major
-                      reverse-theme yaml-mode
-                     ))
-
-(package-initialize)
-(dolist (p mypackages)
-  (when (not (package-installed-p p))
-    (package-install p)))
-#+END_SRC
-
-*** Autocomplete
-#+BEGIN_SRC emacs-lisp :tangle no
-(require 'auto-complete)
-#+END_SRC
-
-*** Turn on ido-vertical
-#+BEGIN_SRC emacs-lisp :tangle no
-(require 'ido-vertical-mode)
-(ido-mode 1)
-(ido-vertical-mode 1)
-(setq ido-vertical-count t)
-#+END_SRC
-*** smartparen all the things
-#+BEGIN_SRC emacs-lisp :tangle no
-(require 'smartparens-config)
-#+END_SRC
-
 
 ** Shortcuts and Registers
 
@@ -836,6 +815,7 @@ anyway by default and control is easier for me to go to than escape.
 #+END_SRC
 
 * TODO
+** TODO Organize packages alphabetically
 ** TODO Try out helm 
 ** DONE Investigate load errors in dbrumley.org
 These two warnings:
