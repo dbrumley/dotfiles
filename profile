@@ -3,7 +3,7 @@
 
 source /etc/profile
 
-export PATH=~/bin:/opt/local/bin:/opt/local/sbin:$PATH
+export PATH=~/bin:/opt/local/bin:/opt/local/sbin:/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin:$PATH
 
 
 # OPAM configuration
