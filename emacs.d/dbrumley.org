@@ -416,6 +416,7 @@ Make sure org knows about all the languages we use
      (ocaml . t)
      (python . t)
      (shell . t)
+     (C . t)
     )
 ) 
 #+END_SRC
@@ -782,6 +783,44 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
 
+** Langtool
+I found this handy tool for doing grammar checking referenced [[https://joelkuiper.eu/spellcheck_emacs][here]]
+called langtool.  It unfortunately requires Java be installed, but it
+does seem handy.
+
+Executing =langtool-check-buffer= will check the buffer and highlight
+grammatical errors.  =langtool-correct-buffer= will bring up an
+explanation and suggestion for correcting.
+
+#+BEGIN_SRC emacs-lisp
+(use-package langtool
+  :ensure t
+  :config 
+  (progn
+  (setq langtool-language-tool-jar "/usr/local/LanguageTool-2.9/languagetool-commandline.jar")
+  )
+)
+#+END_SRC
+
+** Writegood
+We want to be able to check for "weasel" words et al. This is a handy
+package, and also referenced on [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might]]'s blog. I enable this mode
+by default for latex and for text files. 
+
+#+BEGIN_SRC emacs-lisp
+(use-package writegood-mode
+  :ensure t
+  :config 
+  (progn
+     (defun writegood-minor-mode-on ()
+        "Turn on `writegood-mode` mode."
+        (interactive)
+        (writegood-mode 1))
+     (add-hook 'text-mode-hook 'writegood-minor-mode-on)
+     (add-hook 'latex-mode-hook 'writegood-minor-mode-on)
+  )
+)
+#+END_SRC
 
 ** Shortcuts and Registers
 
@@ -839,4 +878,7 @@ window. After editing, type =C-c '= again to return to the main
 buffer. 
 ** Use discover-my-major
 Discover my major will show you key bindings in the current major
-mode. By default the key binding is =C-h C-m=
+mode. By default the key binding is =C-h C-m=.
+
+
+* Test
