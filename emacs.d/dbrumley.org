@@ -48,10 +48,44 @@ is FQDN.
     (setq system-name (car (split-string system-name "\\."))))
 #+END_SRC
 
+*** Set up the right profile information and shell
+
+Taken from
+https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage
+
+If you are using compilation mode in Emacs.app it is likely that you
+won't have a correct environment (this can simply be checked by
+issuing env as the compilation command). There are various tips that
+will tell you how to adjust your =$PATH=, but it's not enough, there are
+other environment variables setup by opam.
+
+A simple solution to this problem is to invoke the compilation mode
+shell as a login shell; this will read your =.profile= or =.bash_profile=
+file and everything should be setup correctly. 
+
+#+BEGIN_SRC emacs-lisp
+(cond 
+ ((eq window-system 'ns) ; macosx
+  ;; Invoke login shells, so that .profile or .bash_profile is read
+  (setq shell-command-switch "-lc")))
+#+END_SRC
+
+The subshell invoked through M-x shell tries to read from
+=~/.emacs_$SHELL= or =~/.emacs.d/init_$SHELL.sh= which is not very
+convenient maintenance wise. Like for compilation mode the easiest is
+to invoke the subshell as a login shell as this will read your
+=.profile= or =.bash_profile=. This can be achieved by settings the
+variable =explicit-$SHELL-args= in your =.emacs=. So for example if you
+are using bash just add:
+
+#+BEGIN_SRC emacs-lisp
+(setq explicit-bash-args '("--login" "-i"))
+#+END_SRC
+
 *** Use the system defined web browser
 
 #+BEGIN_SRC emacs-lisp
-(setq browse-url-browser-function 'browse-default-macosx-browser)
+(setq browse-url-browser-function 'browse-url-default-macosx-browser)
 #+END_SRC
 
 *** Set up UTF-8
@@ -306,6 +340,8 @@ via the config hook.
 )
 #+END_SRC
 
+Configure smartparens.  Note the orgmode configuration was taken from
+[[https://github.com/Fuco1/.emacs.d/blob/master/files/smartparens.el][here]], and takes care of matching things like '~'.
 #+BEGIN_SRC emacs-lisp 
   (use-package smartparens
     :ensure t
@@ -314,6 +350,20 @@ via the config hook.
     (progn
        (require 'smartparens-config)
        (smartparens-global-mode 1)
+       ;;; org-mode
+       (sp-with-modes 'org-mode
+       (sp-local-pair "*" "*" :actions '(insert wrap) :unless '(sp-point-after-word-p sp-point-at-bol-p) :wrap "C-*" :skip-match 'sp--org-skip-asterisk)
+       (sp-local-pair "_" "_" :unless '(sp-point-after-word-p) :wrap "C-_")
+       (sp-local-pair "/" "/" :unless '(sp-point-after-word-p))
+       (sp-local-pair "~" "~" :unless '(sp-point-after-word-p))
+       (sp-local-pair "«" "»"))
+
+       (defun sp--org-skip-asterisk (ms mb me)
+       (or (and (= (line-beginning-position) mb)
+       (eq 32 (char-after (1+ mb))))
+       (and (= (1+ (line-beginning-position)) me)
+       (eq 32 (char-after me)))))
+       
     )
   )
 #+END_SRC
@@ -340,53 +390,21 @@ Define word at point will define a word...at the current point.
 )
 #+END_SRC
 
-** Org mode
-
-I use org-mode checked out from git. I don't use melpa because I want
-to play around with org-contrib, and I could never get
-org-plus-contrib to work and load properly.  Since we have to load
-org-mode first, I don't use =use-package= to configure.
-
-The following loads org, and sets up the modules I plan to play around
-with. Note I've only gotten this to work with a fresh checkout of
-orgmode as:
-#+BEGIN_SRC shell :tangle no
-$ git clone git://orgmode.org/org-mode.git
-$ <edit org-mode/local.mk> 
-$ make autoloads
-#+END_SRC
-
-The edit to =org-mode/local.mk= is to make sure the correct emacs is
-chosen (by default it uses the default OSX one instead of the one I
-installed).
-
-
-Then I've added to my =init.el= the following to make sure the new
-orgmode is used instead of the built-in:
-#+BEGIN_SRC emacs-lisp :tangle no
-(add-to-list 'load-path "~/path/to/orgdir/lisp")
-(add-to-list 'load-path "~/path/to/orgdir/contrib/lisp" t)
-#+END_SRC
-
-Finally, we start real configure. First, I load in some contrib's I'm
-playing with.
+** Helm
 
 #+BEGIN_SRC emacs-lisp
-(setq org-modules
-              '(org-bbdb 
-                org-bibtex 
-                org-docview 
-                org-gnus 
-                org-info 
-                org-irc 
-                org-mhe 
-                org-rmail 
-                org-w3m
-                org-drill))
-(eval-after-load 'org
- '(org-load-modules-maybe t))
+(use-package helm
+  :ensure t
+  :init 
+  (progn
+  (require 'helm-config)
+  (helm-mode 1))
+)
 #+END_SRC
 
+** Org mode
+
+*** Default options
 And fontify the buffers and set the default org directory:
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t)
@@ -397,6 +415,16 @@ And set up a register key to go to my journal (j)
   (set-register ?j (cons 'file "~/Dropbox/org-mode/journal.org"))
 #+END_SRC
 
+
+This allows us to have alphabetical lists list 'a.', 'A.', etc.
+#+BEGIN_SRC emacs-lisp
+(setq org-list-allow-alphabetical 1)
+#+END_SRC
+
+Set up images so they are displayed inline:
+#+BEGIN_SRC emacs-lisp
+(setq org-startup-with-inline-images t)
+#+END_SRC
 
 
 *** Org Journal and Capture
@@ -415,7 +443,7 @@ Make sure org knows about all the languages we use
      (emacs-lisp . t)
      (ocaml . t)
      (python . t)
-     (shell . t)
+     ;(shell . t)
      (C . t)
     )
 ) 
@@ -471,6 +499,7 @@ Tell orgmode which files to look for agenda's in.
       (delq nil
             (mapcar (lambda (x) (and (file-exists-p x) x))
                     '("~/Dropbox/org-mode/journal.org"
+                      "~/Dropbox/org-mode/todo.org"
 ))))
 #+END_SRC
 
@@ -485,21 +514,81 @@ Set up some global key maps
 (define-key global-map "\C-ca" 'org-agenda)
 #+END_SRC
 
-A more gtd-ish workflow, including when something is delegated.
+A gtd-sih workflow:
 #+BEGIN_SRC emacs-lisp
 (setq org-todo-keywords
  '((sequence
     "TODO(t)"  ; next action
     "STARTED(s)"
-    "DELEGATED(d)"
     "WAITING(w@/!)"
     "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
 #+END_SRC
 
-And set up a nice color for delegated
+Show columns initially
 #+BEGIN_SRC emacs-lisp
-(setq org-todo-keyword-faces
-        '(("DELEGATED" . (:foreground "cyan" :weight bold))))
+(setq org-agenda-view-columns-initially t)
+#+END_SRC
+
+Make sure effort estimates are in the agenda column view columns:
+#+BEGIN_SRC emacs-lisp
+(setq org-columns-default-format 
+     "%50ITEM %TODO %3PRIORITY %Effort{:} %TAGS")
+#+END_SRC
+
+And sort by the effort:
+#+BEGIN_SRC emacs-lisp
+(setq org-agenda-sorting-strategy '(todo-state-up priority-down effort-up tag-up))
+#+END_SRC
+
+*** Broken Org with cool extras
+I use org-mode checked out from git. I don't use melpa because I want
+to play around with org-contrib, and I could never get
+org-plus-contrib to work and load properly.  Since we have to load
+org-mode first, I don't use =use-package= to configure.
+
+The following loads org, and sets up the modules I plan to play around
+with. Note I've only gotten this to work with a fresh checkout of
+orgmode as:
+#+BEGIN_SRC shell :tangle no
+$ git clone git://orgmode.org/org-mode.git
+$ <edit org-mode/local.mk> 
+$ make autoloads
+#+END_SRC
+
+The edit to =org-mode/local.mk= is to make sure the correct emacs is
+chosen (by default it uses the default OSX one instead of the one I
+installed).
+
+
+# Then I've added to my =init.el= the following to make sure the new
+# orgmode is used instead of the built-in:
+# #+BEGIN_SRC emacs-lisp :tangle no
+# (add-to-list 'load-path "~/path/to/orgdir/lisp")
+# (add-to-list 'load-path "~/path/to/orgdir/contrib/lisp" t)
+# #+END_SRC
+
+# Finally, we start real configure. First, I load in some contrib's I'm
+# playing with.
+
+#+BEGIN_SRC emacs-lisp
+;(setq org-modules
+;              '(org-bbdb 
+;                org-bibtex 
+;                org-bullets
+;                org-docview 
+;                org-gnus 
+;                org-info 
+;                org-irc 
+;                org-mhe 
+;                org-rmail 
+;                org-w3m
+;                org-drill))
+;(eval-after-load 'org
+; '(org-load-modules-maybe t))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+;(require 'org-bullets)
 #+END_SRC
 
 
@@ -609,6 +698,12 @@ performance issues; if this happens just comment it out.
   )
 #+END_SRC
 
+We also need to configure =utop=:
+#+BEGIN_SRC emacs-lisp
+;; Automatically load utop.el
+(autoload 'utop "utop" "Toplevel for OCaml" t)
+#+END_SRC
+
 *** Set up ott
 I install ott from =opam=, so I don't include it in the package
 manager.  Note that ott's emacs config needs a specialized path (which
@@ -630,6 +725,14 @@ access this press =C-x r j= and press =b= at the prompt.
                          (opam-lib-path "/bap/bap.mli")))
 #+END_SRC
 
+** OSX
+#+BEGIN_SRC emacs-lisp
+(use-package osx-browse
+ :ensure t
+ :config 
+ (setq browse-default-macosx-browser 'osx-browse-url)
+)
+#+END_SRC
 ** YAML and Markdown
 *** Markdown
 I use two markdown modules current: markdown-mode for editing, and the
