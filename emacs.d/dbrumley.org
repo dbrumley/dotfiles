@@ -403,7 +403,6 @@ Define word at point will define a word...at the current point.
 #+END_SRC
 
 ** Org mode
-
 *** Default options
 And fontify the buffers and set the default org directory:
 #+BEGIN_SRC emacs-lisp
@@ -425,7 +424,6 @@ Set up images so they are displayed inline:
 #+BEGIN_SRC emacs-lisp
 (setq org-startup-with-inline-images t)
 #+END_SRC
-
 
 *** Org Journal and Capture
 Set up our default directory and default org capture.
@@ -490,7 +488,6 @@ Let's look at the first one for journal:
     =%i= itself.
   - =%?= after completing the template, position cursor here.
 
-
 *** Org agenda and TODO
 
 Tell orgmode which files to look for agenda's in.
@@ -524,6 +521,13 @@ A gtd-sih workflow:
     "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
 #+END_SRC
 
+Clock in when a task is started. Note [[http://sachachua.com/blog/2007/12/clocking-time-with-emacs-org/][Sacha Chua]] blog entry for this
+does not work (undefined variable ~state~), but then I looked through
+her emacs configuration and found this. 
+#+BEGIN_SRC emacs-lisp
+(setq org-clock-in-switch-to-state "STARTED")
+#+END_SRC
+
 Show columns initially
 #+BEGIN_SRC emacs-lisp
 (setq org-agenda-view-columns-initially t)
@@ -538,6 +542,23 @@ Make sure effort estimates are in the agenda column view columns:
 And sort by the effort:
 #+BEGIN_SRC emacs-lisp
 (setq org-agenda-sorting-strategy '(todo-state-up priority-down effort-up tag-up))
+#+END_SRC
+
+When clocking in, make sure there is an effort estimate (taken from
+[[http://orgmode.org/worg/org-hacks.html][Org Hacks]]) 
+#+BEGIN_SRC emacs-lisp
+(add-hook 'org-clock-in-prepare-hook
+          'my-org-mode-ask-effort)
+
+(defun my-org-mode-ask-effort ()
+  "Ask for an effort estimate when clocking in."
+  (unless (org-entry-get (point) "Effort")
+    (let ((effort
+           (completing-read
+            "Effort: "
+            (org-entry-get-multivalued-property (point) "Effort"))))
+      (unless (equal effort "")
+        (org-set-property "Effort" effort)))))
 #+END_SRC
 
 *** Broken Org with cool extras
@@ -591,18 +612,20 @@ installed).
 ;(require 'org-bullets)
 #+END_SRC
 
-
 ** Python
 I am a basic elpy user, and so far am quite happy with it. I use it
 with company-mode for providing quickhints, which provide pydoc
-documentation on autocomplete. 
+documentation on autocomplete.   Finally, use =ipython= for our REPL.
 
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
   :ensure t
   :config 
+  (progn
     (elpy-enable)
     (company-quickhelp-mode)
+    (elpy-use-ipython)
+  )
 )
 #+END_SRC
 
@@ -615,6 +638,14 @@ and I didn't have to disable :)
 ;(setq elpy-modules
 ;    (quote
 ;     (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
+#+END_SRC
+
+This installs PEP8 tools:
+#+BEGIN_SRC emacs-lisp
+(use-package py-autopep8
+  :ensure t
+  :config (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+)
 #+END_SRC
 
 ** OCaml
