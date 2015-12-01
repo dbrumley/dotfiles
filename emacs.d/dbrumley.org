@@ -4,7 +4,7 @@
 * Configuration
 ** About this file
 This file is inspired by [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs Configuration]] using
-literate programming for her Emacs configuration. 
+literate programming for her Emacs configuration.
 
 My =~/.emacs.d/init.el= file starts off simply:
 #+begin_src emacs-lisp :tangle no
@@ -14,7 +14,7 @@ My =~/.emacs.d/init.el= file starts off simply:
 (org-babel-load-file "~/.emacs.d/dbrumley.org")
 #+end_src
 
-The first line is needed to start up the package manager. 
+The first line is needed to start up the package manager.
 
 The second and third make sure I use the git-installed orgmode.  I use
 the git version.  (I've not figured out how to use the
@@ -28,14 +28,14 @@ The fourth says to load the rest from my org file. Note that the
 this is just an example. Future lines will not have that directive.
 
 ** Personal information
-Set up my name and email address.  
+Set up my name and email address.
 
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name "David Brumley"
       user-mail-address "dbrumley@cmu.edu")
 #+END_SRC
 
-** Basic OS configuration 
+** Basic OS configuration
 This section should only include OS-specific things.
 *** OS X behaviors
 According to the [[https://github.com/eschulte/emacs24-starter-kit/blob/master/starter-kit.org][starter kit]], there is a bug on OS X where system-name
@@ -61,10 +61,10 @@ other environment variables setup by opam.
 
 A simple solution to this problem is to invoke the compilation mode
 shell as a login shell; this will read your =.profile= or =.bash_profile=
-file and everything should be setup correctly. 
+file and everything should be setup correctly.
 
 #+BEGIN_SRC emacs-lisp
-(cond 
+(cond
  ((eq window-system 'ns) ; macosx
   ;; Invoke login shells, so that .profile or .bash_profile is read
   (setq shell-command-switch "-lc")))
@@ -100,7 +100,7 @@ The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.
 *** Add macports to path
 Among other things, this allows emacs to find ispell (aka aspell).
 Note that I'm putting =/opt/local/bin= before the normal system
-path on purpose. 
+path on purpose.
 
 #+BEGIN_SRC emacs-lisp
   (setq exec-path (append '("/opt/local/bin") exec-path))
@@ -118,14 +118,14 @@ prompt. I initially found this hard to remember until I figured out:
   * =r= is register
   * =j= is jump
 So overall I think of this as "execute the command register jump",
-which is very logical if you think about it. 
+which is very logical if you think about it.
 
 #+BEGIN_SRC emacs-lisp
   (set-register ?d (cons 'file "~/.emacs.d/dbrumley.org"))
 #+END_SRC
 *** Turn off splash screen
 #+BEGIN_SRC emacs-lisp
-(setq inhibit-splash-screen t) 
+(setq inhibit-splash-screen t)
 #+END_SRC
 
 *** Highlight matching parentheses
@@ -147,7 +147,7 @@ which is very logical if you think about it.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'text-mode-hook 'turn-on-auto-fill)
 #+END_SRC
-    
+
 *** Turn off backup files
 #+BEGIN_SRC emacs-lisp
   (set-default 'make-backup-files nil)
@@ -163,20 +163,37 @@ which is very logical if you think about it.
 #+END_SRC
 *** Turn off toolbar
 #+BEGIN_SRC emacs-lisp
-(tool-bar-mode -1) 
+(tool-bar-mode -1)
 #+END_SRC
 *** Put time in status bar
 #+BEGIN_SRC emacs-lisp
   (setq display-time-day-and-date t display-time-24hr-format t)
                (display-time)
 #+END_SRC
+*** Delete trailing white space
+
+To remove trailing white space, Emacs v21 and greater has =M-x
+delete-training-whitespace=. This runs the command as part of the
+=before-save-hook=.
+#+BEGIN_SRC emacs-lisp
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+END_SRC
+
+Optionally, this could be done only in particular modes, e.g.,
+#+BEGIN_EXAMPLE emacs-lisp
+(add-hook 'c-mode-hook
+(lambda () (add-to-list 'write-file-functions
+                        'delete-trailing-whitespace)))
+#+END_EXAMPLE
+
+
 ** Basic Packages
 I put here more fundamental packages, with more programming-specific
 or involved configurations at the top level.
 
 *** Add some additional repositories
 I currently do not have marmalade, as melpa and org mode
-typically are good enough for me. 
+typically are good enough for me.
 #+BEGIN_SRC emacs-lisp
 (setq package-archives
       '(("gnu"         . "http://elpa.gnu.org/packages/")
@@ -189,7 +206,7 @@ typically are good enough for me.
 #+END_SRC
 
 Use =M-x package-refresh-contents= to reload the list of packages
-after adding this the first time, and subsequent edits. 
+after adding this the first time, and subsequent edits.
 
 *** =use-package= goodness
 I saw [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]'s configuration used this thing called [[https://github.com/jwiegley/use-package][use-package]],
@@ -231,17 +248,17 @@ I do set up a fill-column-indicator to set up a visual bar on the
 right of my screen showing the 80 column maximum. I like to remind
 (annoy?) my graduate students that 80 columns is the maximum. They, of
 course, don't like this an insist screens are bigger than this, and
-proceed to show me on their screen how big it is. 
+proceed to show me on their screen how big it is.
 
 I insist on 80 columns for a few reasons:
   1. 80 columns is really the maximum size you can print with a nice
      monospace font.
   2. I find it easier since I like split screens, and with 80 columns
-     I can put two windows side-by-side. 
+     I can put two windows side-by-side.
   3. It's standard in every editor. Why make the whole world
      reconfigure to their personal preference?
 
-This will set it up as a global minor mode. 
+This will set it up as a global minor mode.
 #+BEGIN_SRC emacs-lisp
 (use-package fill-column-indicator
   :ensure t
@@ -264,7 +281,7 @@ it is.
 #+END_SRC
 
 *** Set up magit
-I've started using magit as part of my emacs-is-my-os effort.  
+I've started using magit as part of my emacs-is-my-os effort.
 
 One question is whether to set magit-auto-revert-mode or not. The
 default is to set it, but there is an option to do:
@@ -277,7 +294,7 @@ the default), you may have data loss. The [[https://github.com/magit/magit/issue
 updating every time you do a git pull might be annoying. I'm going
 with his advice here; hope I'm not shooting myself in the foot.
 
-The below binds =C-x v d= to =magit-status=.  
+The below binds =C-x v d= to =magit-status=.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -306,7 +323,7 @@ better), but currently that is just a todo for me.
 #+END_SRC
 
 I also like to have the list of completions listed vertically, not
-horizontally. 
+horizontally.
 #+BEGIN_SRC emacs-lisp
 (use-package ido-vertical-mode
   :ensure t
@@ -317,12 +334,12 @@ I use [[http://company-mode.github.io/][company mode]] for auto-completion.  Fun
 company mode was some sort of corporate mode. It actually stands for
 "complete anything".  Note this is use by elpy for python, but I have
 it here since it works with most languages.  I also enable it globally
-via the config hook. 
+via the config hook.
 
 #+BEGIN_SRC emacs-lisp
 (use-package company
   :ensure t
-  :config 
+  :config
    (add-hook 'after-init-hook 'global-company-mode)
 )
 (use-package company-quickhelp
@@ -342,11 +359,11 @@ via the config hook.
 
 Configure smartparens.  Note the orgmode configuration was taken from
 [[https://github.com/Fuco1/.emacs.d/blob/master/files/smartparens.el][here]], and takes care of matching things like '~'.
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp
   (use-package smartparens
     :ensure t
     :diminish smartparens-mode
-    :config  
+    :config
     (progn
        (require 'smartparens-config)
        (smartparens-global-mode 1)
@@ -356,6 +373,7 @@ Configure smartparens.  Note the orgmode configuration was taken from
        (sp-local-pair "_" "_" :unless '(sp-point-after-word-p) :wrap "C-_")
        (sp-local-pair "/" "/" :unless '(sp-point-after-word-p))
        (sp-local-pair "~" "~" :unless '(sp-point-after-word-p))
+       (sp-local-pair "=" "=" :unless '(sp-point-after-word-p))
        (sp-local-pair "«" "»"))
 
        (defun sp--org-skip-asterisk (ms mb me)
@@ -363,7 +381,7 @@ Configure smartparens.  Note the orgmode configuration was taken from
        (eq 32 (char-after (1+ mb))))
        (and (= (1+ (line-beginning-position)) me)
        (eq 32 (char-after me)))))
-       
+
     )
   )
 #+END_SRC
@@ -395,7 +413,7 @@ Define word at point will define a word...at the current point.
 #+BEGIN_SRC emacs-lisp
 (use-package helm
   :ensure t
-  :init 
+  :init
   (progn
   (require 'helm-config)
   (helm-mode 1))
@@ -444,7 +462,7 @@ Make sure org knows about all the languages we use
      ;(shell . t)
      (C . t)
     )
-) 
+)
 #+END_SRC
 
 Set up default notes directory for random things.
@@ -461,7 +479,7 @@ This was taken from
 These are our templates for capturing things quickly. To invoke
 org-capture, type =C-c c=
 
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp
 (setq org-capture-templates
       '(("j" "Log entry" entry
          (file+datetree+prompt "~/Dropbox/org-mode/journal.org")
@@ -481,7 +499,7 @@ Let's look at the first one for journal:
   - first we say this is a journal entry, and it's bound to =C-c c j=.
   - The =file+datetree+prompt= keyword means that the entires will be
     stored in =~/Dropbox/org-mode/journal.org=
-  - =%K= means link to the currently clocked task. 
+  - =%K= means link to the currently clocked task.
   - =%a= means annotation.
   - =%i= means initial content, the region when capture is called
     while the region is active. The entire text will be indented like
@@ -523,7 +541,7 @@ A gtd-sih workflow:
 
 Clock in when a task is started. Note [[http://sachachua.com/blog/2007/12/clocking-time-with-emacs-org/][Sacha Chua]] blog entry for this
 does not work (undefined variable ~state~), but then I looked through
-her emacs configuration and found this. 
+her emacs configuration and found this.
 #+BEGIN_SRC emacs-lisp
 (setq org-clock-in-switch-to-state "STARTED")
 #+END_SRC
@@ -535,7 +553,7 @@ Show columns initially
 
 Make sure effort estimates are in the agenda column view columns:
 #+BEGIN_SRC emacs-lisp
-(setq org-columns-default-format 
+(setq org-columns-default-format
      "%50ITEM %TODO %3PRIORITY %Effort{:} %TAGS")
 #+END_SRC
 
@@ -545,7 +563,7 @@ And sort by the effort:
 #+END_SRC
 
 When clocking in, make sure there is an effort estimate (taken from
-[[http://orgmode.org/worg/org-hacks.html][Org Hacks]]) 
+[[http://orgmode.org/worg/org-hacks.html][Org Hacks]])
 #+BEGIN_SRC emacs-lisp
 (add-hook 'org-clock-in-prepare-hook
           'my-org-mode-ask-effort)
@@ -572,7 +590,7 @@ with. Note I've only gotten this to work with a fresh checkout of
 orgmode as:
 #+BEGIN_SRC shell :tangle no
 $ git clone git://orgmode.org/org-mode.git
-$ <edit org-mode/local.mk> 
+$ <edit org-mode/local.mk>
 $ make autoloads
 #+END_SRC
 
@@ -593,15 +611,15 @@ installed).
 
 #+BEGIN_SRC emacs-lisp
 ;(setq org-modules
-;              '(org-bbdb 
-;                org-bibtex 
+;              '(org-bbdb
+;                org-bibtex
 ;                org-bullets
-;                org-docview 
-;                org-gnus 
-;                org-info 
-;                org-irc 
-;                org-mhe 
-;                org-rmail 
+;                org-docview
+;                org-gnus
+;                org-info
+;                org-irc
+;                org-mhe
+;                org-rmail
 ;                org-w3m
 ;                org-drill))
 ;(eval-after-load 'org
@@ -620,7 +638,7 @@ documentation on autocomplete.   Finally, use =ipython= for our REPL.
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
   :ensure t
-  :config 
+  :config
   (progn
     (elpy-enable)
     (company-quickhelp-mode)
@@ -651,7 +669,7 @@ This installs PEP8 tools:
 ** OCaml
 Everything OCaml related is done out of opam, not the default emacs
 package sites. This was taken from the opam =user-setup= package and
-Ivan's configuration. 
+Ivan's configuration.
 
 Note that to use a dynamically generated load path, we must inform the
 byte-compiler of the definition so that the value is available. See
@@ -660,19 +678,19 @@ the [[https://github.com/jwiegley/use-package][use-package]] documentation.
 First, we define some utility functions that give us easy access to
 locations under our opam install directory.
 #+BEGIN_SRC emacs-lisp
-  (defun opam-share-path (path) 
+  (defun opam-share-path (path)
     (let ((opam-share-dir
            (shell-command-to-string "echo -n `opam config var share`"))
     ) (concat opam-share-dir "/" path))
   )
-  
-  (defun opam-lib-path (path) 
+
+  (defun opam-lib-path (path)
     (let ((opam-share-dir
            (shell-command-to-string "echo -n `opam config var lib`")))
       (concat opam-share-dir "/" path)
     )
   )
-  (defun opam-bin-path (path) 
+  (defun opam-bin-path (path)
     (let ((opam-share-dir
            (shell-command-to-string "echo -n `opam config var bin`")))
       (concat opam-share-dir "/" path)))
@@ -691,7 +709,7 @@ Second, load up merlin.  We set some preferences:
     functions have the lambda character, etc.
   * =merlin-use-auto-complete-mode= makes auto-complete easy.
   * =merlin-locate-preference= is set to prefer the mli file over the
-    ml file. 
+    ml file.
   * We enable using company as a backend for autocomplete. This should
     have already been enabled globally, but why not have it here too
     just to make sure.
@@ -702,7 +720,7 @@ performance issues; if this happens just comment it out.
 #+BEGIN_SRC emacs-lisp
   (use-package merlin
     :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
-    :config 
+    :config
       (progn
         (load "tuareg-site-file")
         (setq tuareg-font-lock-symbols t)
@@ -716,7 +734,7 @@ performance issues; if this happens just comment it out.
         (add-to-list 'auto-mode-alist '("\\.atd\\'" . tuareg-mode))
         ; Turn on merlin for ocaml
         (add-hook 'tuareg-mode-hook
-          (lambda () 
+          (lambda ()
             (merlin-mode)
             (local-set-key (kbd "C-c c") 'recompile)
             (local-set-key (kbd "C-c C-c") 'recompile)
@@ -724,8 +742,8 @@ performance issues; if this happens just comment it out.
             (tuareg-make-indentation-regexps)
             (auto-fill-mode))
             )
-             
-       )   
+
+       )
   )
 #+END_SRC
 
@@ -738,10 +756,10 @@ We also need to configure =utop=:
 *** Set up ott
 I install ott from =opam=, so I don't include it in the package
 manager.  Note that ott's emacs config needs a specialized path (which
-seems normal for opam for some reason). 
+seems normal for opam for some reason).
 
-#+BEGIN_SRC emacs-lisp 
-(use-package ottmode 
+#+BEGIN_SRC emacs-lisp
+(use-package ottmode
   :load-path (lambda () (list (opam-share-path "/ott/emacs")))
 )
 #+END_SRC
@@ -751,7 +769,7 @@ I like to be able to quickly reference =bap.mli= from anywhere. I bind
 looking at this file currently to the =b= register.  Reminder: to
 access this press =C-x r j= and press =b= at the prompt.
 
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp
 (set-register ?b (cons 'file
                          (opam-lib-path "/bap/bap.mli")))
 #+END_SRC
@@ -760,7 +778,7 @@ access this press =C-x r j= and press =b= at the prompt.
 #+BEGIN_SRC emacs-lisp
 (use-package osx-browse
  :ensure t
- :config 
+ :config
  (setq browse-default-macosx-browser 'osx-browse-url)
 )
 #+END_SRC
@@ -785,7 +803,7 @@ mode, but YAML is close enough.
 #+BEGIN_SRC emacs-lisp
 (use-package yaml-mode
   :ensure t
-  :config 
+  :config
     (add-to-list 'auto-mode-alist '("\\.raml\\'" . yaml-mode))
 )
 #+END_SRC
@@ -855,7 +873,7 @@ seems to work.
 
         (add-to-list 'TeX-view-program-list '("skim-viewer" "%(skim) -o %(line-number) %(pdf-file-name) %(tex-file-name)"))
 
-        (add-to-list 'TeX-command-list 
+        (add-to-list 'TeX-command-list
                      '("doc-view" "(lambda ()
                  (let ((f \"%o\"))
                    (find-file-other-window f)
@@ -875,7 +893,7 @@ seems to work.
     (let* (
         (TeX-PDF-mode t)
         (TeX-source-correlate-mode t)
-        (TeX-source-correlate-method 'synctex) 
+        (TeX-source-correlate-method 'synctex)
         (TeX-source-correlate-start-server nil)
         (TeX-clean-confirm t))
       (when (buffer-modified-p)
@@ -929,7 +947,7 @@ explanation and suggestion for correcting.
 #+BEGIN_SRC emacs-lisp
 (use-package langtool
   :ensure t
-  :config 
+  :config
   (progn
   (setq langtool-language-tool-jar "/usr/local/LanguageTool-2.9/languagetool-commandline.jar")
   )
@@ -939,12 +957,12 @@ explanation and suggestion for correcting.
 ** Writegood
 We want to be able to check for "weasel" words et al. This is a handy
 package, and also referenced on [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might]]'s blog. I enable this mode
-by default for latex and for text files. 
+by default for latex and for text files.
 
 #+BEGIN_SRC emacs-lisp
 (use-package writegood-mode
   :ensure t
-  :config 
+  :config
   (progn
      (defun writegood-minor-mode-on ()
         "Turn on `writegood-mode` mode."
@@ -989,7 +1007,7 @@ anyway by default and control is easier for me to go to than escape.
 
 * TODO
 ** TODO Organize packages alphabetically
-** TODO Try out helm 
+** TODO Try out helm
 ** DONE Investigate load errors in dbrumley.org
 These two warnings:
 Could not load company-mode
@@ -1000,7 +1018,7 @@ See https://github.com/Fuco1/smartparens/wiki/Quick-tour
 
 * Some Reminders
 ** Evaluate lisp statements
-In emacs, you can evaluate a LISP command with =C-x C-e=. 
+In emacs, you can evaluate a LISP command with =C-x C-e=.
 ** See the value of a variable
 You can use =M-x describe-variable= to see the value of a variable,
 e.g., =exec-path= is the equivalent of =PATH= in emacs.
@@ -1009,7 +1027,7 @@ e.g., =exec-path= is the equivalent of =PATH= in emacs.
 Type =<s= followed by the TAB key. You can then do =C-c '= (that is a
 single quote) within the code block to bring up a separate
 window. After editing, type =C-c '= again to return to the main
-buffer. 
+buffer.
 ** Use discover-my-major
 Discover my major will show you key bindings in the current major
 mode. By default the key binding is =C-h C-m=.
