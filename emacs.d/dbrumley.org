@@ -1,8 +1,7 @@
 #+TITLE: David Brumley's Emacs Configuration
 #+OPTIONS: toc:4 h:4
 
-* Configuration
-** About this file
+* About this file
 This file is inspired by [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs Configuration]] using
 literate programming for her Emacs configuration.
 
@@ -12,7 +11,6 @@ My =~/.emacs.d/init.el= file starts off simply:
 (add-to-list 'load-path "~/.emacs.d/elisp/org-mode/lisp")
 (add-to-list 'load-path "~/.emacs.d/elisp/org-mode/contrib/lisp" t)
 (org-babel-load-file "~/.emacs.d/dbrumley.org")
-(add-to-list 'load-path "~/.emacs.d/snippets")
 #+end_src
 
 The first line is needed to start up the package manager.
@@ -28,7 +26,7 @@ The fourth says to load the rest from my org file. Note that the
 =:tangle no= says that the above line is *not* exported as source as
 this is just an example. Future lines will not have that directive.
 
-** Personal information
+* Personal information
 Set up my name and email address.
 
 #+BEGIN_SRC emacs-lisp
@@ -36,9 +34,9 @@ Set up my name and email address.
       user-mail-address "dbrumley@cmu.edu")
 #+END_SRC
 
-** Basic OS configuration
+* Basic OS configuration
 This section should only include OS-specific things.
-*** OS X behaviors
+** OS X behaviors
 According to the [[https://github.com/eschulte/emacs24-starter-kit/blob/master/starter-kit.org][starter kit]], there is a bug on OS X where system-name
 is FQDN.
 
@@ -49,7 +47,7 @@ is FQDN.
     (setq system-name (car (split-string system-name "\\."))))
 #+END_SRC
 
-*** Set up the right profile information and shell
+** Set up the right profile information and shell
 
 Taken from
 https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage
@@ -83,13 +81,13 @@ are using bash just add:
 (setq explicit-bash-args '("--login" "-i"))
 #+END_SRC
 
-*** Use the system defined web browser
+** Use the system defined web browser
 
 #+BEGIN_SRC emacs-lisp
 (setq browse-url-browser-function 'browse-url-default-macosx-browser)
 #+END_SRC
 
-*** Set up UTF-8
+** Set up UTF-8
 The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.org/emacs/EmacsForMacOS][Emacs Wiki]]
 
 #+BEGIN_SRC emacs-lisp
@@ -98,7 +96,7 @@ The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.
 (prefer-coding-system 'utf-8)
 #+END_SRC
 
-*** Add macports to path
+** Add macports to path
 Among other things, this allows emacs to find ispell (aka aspell).
 Note that I'm putting =/opt/local/bin= before the normal system
 path on purpose.
@@ -107,8 +105,8 @@ path on purpose.
   (setq exec-path (append '("/opt/local/bin") exec-path))
 #+END_SRC
 
-** Initial Preferences
-*** bind =dbrumley.org= =d= register
+* Initial Preferences
+** bind =dbrumley.org= =d= register
 I bind a register key to =dbrumley.org= because I find myself editing
 it often.  I put this at the top because I want it available even if
 something else doesn't load.
@@ -123,55 +121,52 @@ which is very logical if you think about it.
 
 #+BEGIN_SRC emacs-lisp
   (set-register ?d (cons 'file "~/.emacs.d/dbrumley.org"))
+  (set-register ?t (cons 'file "~/Dropbox/org-mode/todo.org"))
 #+END_SRC
-*** Turn off splash screen
+** Turn off splash screen
 #+BEGIN_SRC emacs-lisp
 (setq inhibit-splash-screen t)
 #+END_SRC
 
-*** Highlight matching parentheses
+** Highlight matching parentheses
 #+BEGIN_SRC emacs-lisp
 (show-paren-mode 1)
 #+END_SRC
 
-*** Turn off tabs
+** Turn off tabs
 #+BEGIN_SRC emacs-lisp
   (set-default 'indent-tabs-mode nil)
 #+END_SRC
 
-*** Indicate empty lines
+** Indicate empty lines
 #+BEGIN_SRC emacs-lisp
   (set-default 'indicate-empty-lines t)
 #+END_SRC
 
-*** Turn on auto-fill for text mode
+** Turn on auto-fill for text mode
 #+BEGIN_SRC emacs-lisp
   (add-hook 'text-mode-hook 'turn-on-auto-fill)
 #+END_SRC
 
-*** Turn off backup files
+** Turn off backup files
 #+BEGIN_SRC emacs-lisp
   (set-default 'make-backup-files nil)
 #+END_SRC
 
-*** Change "yes or no" to "y or n"
+** Change "yes or no" to "y or n"
 #+BEGIN_SRC emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
-*** Use SSH by default for TRAMP
-#+BEGIN_SRC emacs-lisp
-(setq tramp-default-method "ssh")
-#+END_SRC
-*** Turn off toolbar
+** Turn off toolbar
 #+BEGIN_SRC emacs-lisp
 (tool-bar-mode -1)
 #+END_SRC
-*** Put time in status bar
+** Put time in status bar
 #+BEGIN_SRC emacs-lisp
   (setq display-time-day-and-date t display-time-24hr-format t)
                (display-time)
 #+END_SRC
-*** Delete trailing white space
+** Delete trailing white space
 
 To remove trailing white space, Emacs v21 and greater has =M-x
 delete-training-whitespace=. This runs the command as part of the
@@ -187,12 +182,11 @@ Optionally, this could be done only in particular modes, e.g.,
                         'delete-trailing-whitespace)))
 #+END_EXAMPLE
 
-
-** Basic Packages
+* Basic Packages and Configuration
 I put here more fundamental packages, with more programming-specific
 or involved configurations at the top level.
 
-*** Add some additional repositories
+** Set up external repositories
 I currently do not have marmalade, as melpa and org mode
 typically are good enough for me.
 #+BEGIN_SRC emacs-lisp
@@ -209,7 +203,7 @@ typically are good enough for me.
 Use =M-x package-refresh-contents= to reload the list of packages
 after adding this the first time, and subsequent edits.
 
-*** =use-package= goodness
+** =use-package= goodness
 I saw [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]'s configuration used this thing called [[https://github.com/jwiegley/use-package][use-package]],
 and am trying it out for managing my list of packages to install
 automatically.
@@ -240,48 +234,7 @@ startup time.
 (require 'bind-key)                ;; if you use any :bind variant
 #+END_SRC
 
-*** Set up visuals, including theme and fill column
-I expected this section to be bigger, but I don't really use themes
-much anymore. I use either the default theme, or run emacs in reverse
-mode (recommended by ivg!).
-
-I do set up a fill-column-indicator to set up a visual bar on the
-right of my screen showing the 80 column maximum. I like to remind
-(annoy?) my graduate students that 80 columns is the maximum. They, of
-course, don't like this an insist screens are bigger than this, and
-proceed to show me on their screen how big it is.
-
-I insist on 80 columns for a few reasons:
-  1. 80 columns is really the maximum size you can print with a nice
-     monospace font.
-  2. I find it easier since I like split screens, and with 80 columns
-     I can put two windows side-by-side.
-  3. It's standard in every editor. Why make the whole world
-     reconfigure to their personal preference?
-
-This will set it up as a global minor mode.
-#+BEGIN_SRC emacs-lisp
-(use-package fill-column-indicator
-  :ensure t
-  :config
-  (progn
-     (define-globalized-minor-mode
-         global-fci-mode fci-mode (lambda () (fci-mode 1)))
-     (global-fci-mode t)
-  )
-)
-#+END_SRC
-
-
-I also currently use powerline, though I'm not sure really how useful
-it is.
-#+BEGIN_SRC emacs-lisp
-(use-package powerline
-  :ensure t
-)
-#+END_SRC
-
-*** Set up magit
+** Set up magit
 I've started using magit as part of my emacs-is-my-os effort.
 
 One question is whether to set magit-auto-revert-mode or not. The
@@ -307,7 +260,7 @@ The below binds =C-x v d= to =magit-status=.
 )
 #+END_SRC
 
-*** Set up ido, and run it on all the things
+** Set up ido, and run it on all the things
 Currently I'm using ido mode.  I should try out helm (suppose to be
 better), but currently that is just a todo for me.
 
@@ -330,7 +283,7 @@ horizontally.
   :ensure t
 )
 #+END_SRC
-*** Set up company mode
+** Set up company mode
 I use [[http://company-mode.github.io/][company mode]] for auto-completion.  Funny story: I thought
 company mode was some sort of corporate mode. It actually stands for
 "complete anything".  Note this is use by elpy for python, but I have
@@ -348,8 +301,8 @@ via the config hook.
 )
 #+END_SRC
 
-*** Discover my major
-*** smex, smartparen, and discover-my-major
+** Discover my major
+** smex, smartparen, and discover-my-major
 
 #+BEGIN_SRC emacs-lisp
 (use-package smex
@@ -395,7 +348,7 @@ In any mode =C-h C-m= will show a list of key bindings.
 (global-set-key (kbd "C-h C-m") 'discover-my-major)
 #+END_SRC
 
-*** define-word
+** define-word
 Define word at point will define a word...at the current point.
 
 #+BEGIN_SRC emacs-lisp
@@ -409,7 +362,113 @@ Define word at point will define a word...at the current point.
 )
 #+END_SRC
 
-** Helm
+* Visuals
+** TODO Set up line numbers on left hand side not working
+#+BEGIN_SRC emacs-lisp
+(setq global-linum-mode t)
+#+END_SRC
+
+
+** Color theme
+Sometimes I just use reverse mode. Right now I'm trying out Sacha
+Chua's color theme.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package color-theme)
+(use-package color-theme-solarized :ensure t)
+(defun my/setup-color-theme ()
+  (interactive)
+  (color-theme-solarized-dark)
+  (set-face-foreground 'secondary-selection "darkblue")
+  (set-face-background 'secondary-selection "lightblue")
+  (set-face-background 'font-lock-doc-face "black")
+  (set-face-foreground 'font-lock-doc-face "wheat")
+  (set-face-background 'font-lock-string-face "black")
+  (set-face-foreground 'org-todo "green")
+  (set-face-background 'org-todo "black"))
+
+(eval-after-load 'color-theme
+  '(when window-system
+    (my/setup-color-theme)
+(setq global-linum-mode t)
+))
+
+(when window-system
+  (custom-set-faces
+   '(erc-input-face ((t (:foreground "antique white"))))
+   '(helm-selection ((t (:background "ForestGreen" :foreground "black"))))
+   '(org-agenda-clocking ((t (:inherit secondary-selection :foreground "black"))) t)
+   '(org-agenda-done ((t (:foreground "dim gray" :strike-through nil))))
+   '(org-done ((t (:foreground "PaleGreen" :weight normal :strike-through t))))
+   '(org-clock-overlay ((t (:background "SkyBlue4" :foreground "black"))))
+   '(org-headline-done ((((class color) (min-colors 16) (background dark)) (:foreground "LightSalmon" :strike-through t))))
+   '(outline-1 ((t (:inherit font-lock-function-name-face :foreground "cornflower blue"))))))
+#+END_SRC
+
+This is managars theme
+#+BEGIN_SRC emacs-lisp
+(deftheme default-black
+  "Automatically created 2013-05-20.")
+
+
+(custom-theme-set-faces
+ 'default-black
+ '(default ((t (:inherit nil :stipple nil :background "Black" :foreground "White" :inverse-video nil :box nil :strike-t*hrough nil :overline nil :underline nil :slant normal :weight normal :width normal :height 105))))
+ '(highlight ((((class color) (min-colors 88) (background dark)) (:background "#111111"))))
+ '(region ((nil (:background "#464740"))))
+ '(hl-line ((nil (:background "#222222"))))
+ '(yas-field-highlight-face ((nil (:background "#333399"))))
+ '(js2-function-param-face ((t (:foreground "LightGoldenrod"))))
+ '(font-lock-warning-face ((nil (:foreground "#ff6666"))))
+ '(show-paren-match ((nil (:background "#333399"))))
+ '(show-paren-mismatch ((((class color)) (:background "red")))))
+
+(provide-theme 'default-black)
+
+#+END_SRC
+
+** Set up fill column
+I expected this section to be bigger, but I don't really use themes
+much anymore. I use either the default theme, or run emacs in reverse
+mode (recommended by ivg!).
+
+I do set up a fill-column-indicator to set up a visual bar on the
+right of my screen showing the 80 column maximum. I like to remind
+(annoy?) my graduate students that 80 columns is the maximum. They, of
+course, don't like this an insist screens are bigger than this, and
+proceed to show me on their screen how big it is.
+
+I insist on 80 columns for a few reasons:
+  1. 80 columns is really the maximum size you can print with a nice
+     monospace font.
+  2. I find it easier since I like split screens, and with 80 columns
+     I can put two windows side-by-side.
+  3. It's standard in every editor. Why make the whole world
+     reconfigure to their personal preference?
+
+This will set it up as a global minor mode.
+#+BEGIN_SRC emacs-lisp
+(use-package fill-column-indicator
+  :ensure t
+  :config
+  (progn
+     (define-globalized-minor-mode
+         global-fci-mode fci-mode (lambda () (fci-mode 1)))
+     (global-fci-mode t)
+  )
+)
+#+END_SRC
+
+
+I also currently use powerline, though I'm not sure really how useful
+it is.
+#+BEGIN_SRC emacs-lisp
+(use-package powerline
+  :ensure t
+)
+#+END_SRC
+
+* Helm
 
 #+BEGIN_SRC emacs-lisp
 (use-package helm
@@ -421,19 +480,42 @@ Define word at point will define a word...at the current point.
 )
 #+END_SRC
 
-** HotCRP
-I use the HOTCRP mode from David Mazieres at Stanford, available at
-[[http://www.scs.stanford.edu/~dm/hotcrp-mode/hotcrp-mode.el][http://www.scs.stanford.edu/~dm/hotcrp-mode/hotcrp-mode.el]]
+* mu4e
 
 #+BEGIN_SRC emacs-lisp
-(autoload 'hotcrp-mode "hotcrp-mode" nil t)
-(autoload 'hotcrp-fetch "hotcrp-mode" nil t)
-(add-to-list 'magic-mode-alist
-             '("\\`==\\+== .* Paper Review Form" . hotcrp-mode))
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+(setq mu4e-mu-binary "/usr/local/bin/mu")
+(setq mu4e-maildir "~/Mail/Gmail-mbsync")
+(setq mu4e-view-show-images t)
+(setq mu4e-view-prefer-html t)
+(setq mu4e-html2text-command "w3m -dump -T text/html")
+(setq mu4e-use-fancy-chars t)
+(setq mu4e-headers-skip-duplicates t)
+(setq mu4e-get-mail-command "mbsync gmail")
+(setq mu4e-update-interval 300)
+(setq mu4e-attachment-dir  "~/Downloads")
+(add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
+(setq mu4e-compose-signature-auto-include t)
+(setq message-signature-file "~/.emacs.d/signature.txt")
 #+END_SRC
 
-** Org mode
-*** Default options
+And sending mail
+#+BEGIN_SRC emacs-lisp
+(require 'smtpmail)
+(require 'starttls)
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-stream-type 'starttls
+      smtpmail-smtp-service 587
+      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-user "dbrumley@gmail.com")
+(setq starttls-extra-arguments '("--x509cafile"
+"/usr/local/etc/ssl/certs/ca-certificates.crt"))
+#+END_SRC
+
+* Org mode
+** Default options
 And fontify the buffers and set the default org directory:
 #+BEGIN_SRC emacs-lisp
 (setq org-src-fontify-natively t)
@@ -455,7 +537,7 @@ Set up images so they are displayed inline:
 (setq org-startup-with-inline-images t)
 #+END_SRC
 
-*** Org Journal and Capture
+** Org Journal and Capture
 Set up our default directory and default org capture.
 
 #+BEGIN_SRC emacs-lisp
@@ -518,7 +600,7 @@ Let's look at the first one for journal:
     =%i= itself.
   - =%?= after completing the template, position cursor here.
 
-*** Org agenda and TODO
+** Org agenda and TODO
 
 Tell orgmode which files to look for agenda's in.
 #+BEGIN_SRC emacs-lisp
@@ -591,7 +673,7 @@ When clocking in, make sure there is an effort estimate (taken from
         (org-set-property "Effort" effort)))))
 #+END_SRC
 
-*** Broken Org with cool extras
+** Broken Org with cool extras
 I use org-mode checked out from git. I don't use melpa because I want
 to play around with org-contrib, and I could never get
 org-plus-contrib to work and load properly.  Since we have to load
@@ -642,10 +724,97 @@ installed).
 ;(require 'org-bullets)
 #+END_SRC
 
-** Python
-I am a basic elpy user, and so far am quite happy with it. I use it
-with company-mode for providing quickhints, which provide pydoc
-documentation on autocomplete.   Finally, use =ipython= for our REPL.
+* Python
+
+In Python, I use =elpy=, and so far am quite happy with it. I use it
+with company-mode (completion-mode), =jedi= , and =ipython= for my
+REPL.  I have everything set up for =python3=.
+
+Note that the emacs utilities must work in concert with installed with
+the installed python version, e.g., which =rope= (for autocompletion)
+you install depends on whether you are running python 2 or 3.
+
+** OSX dependencies
+
+Below I detail how I set things up using macports on my OSX macbook
+pro (running El Capitan if that matters).  First install `python3` and
+`pip3`.
+
+#+BEGIN_SRC shell :tangle no
+$ port search python3
+#+END_SRC
+
+In the following, I assume `python35` is the latest; substitute
+whatever latest version you see from the above command.
+
+You need to install `python35` and `py35-pip`:
+
+#+BEGIN_SRC shell :tangle no
+$ port install python35 py35-pip
+#+END_SRC
+
+In accordance with PEP standards, we refer to particular versions of
+Python 3 as `python3`.  You need to configure your particular
+installed version to be known as `python3`, which can be done as
+follows:
+
+#+BEGIN_SRC shell :tangle no
+$ sudo port select python3 python35
+#+END_SRC
+
+Unfortunately, while it is common in Linux to refer to =pip= as the
+python 2 version for, and =pip3= as the Python 3 version of pip,
+macports doesn't quite adhere to this convention. I select to link
+=pip= as the python 3 version:
+
+#+BEGIN_SRC shell :tangle no
+$ sudo port select pip pip35
+#+END_SRC
+
+
+Note: You can always run =port select python3= and =port select pip=
+to see which versions of =pip= and =python= are available.
+
+I also use =ipython= as my REPL.  To install =ipython= for =python3=,
+run:
+#+BEGIN_SRC shell :tangle no
+sudo port install py35-ipython
+#+END_SRC
+
+Similar to =python3= and =pip=, you should use =port select= to
+select the proper symbolic link for =ipython=:
+#+BEGIN_SRC shell :tangle no
+$ port select ipython
+#+END_SRC
+
+When everything is installed correctly you should be able to run =pip=
+and =python3= and verify it's pointing to some variant of version 3.
+
+#+BEGIN_SRC shell tangle:no
+$ pip --version
+pip 8.1.1 from /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages (python 3.5)
+$ python3 --version
+Python 3.5.1
+$ ipython --version
+3.1.0
+#+END_SRC
+
+** Emacs configuration
+I install =elpy= via MELPA (set up above).
+
+Before using =elpy=, install the =pip= dependencies:
+
+#+BEGIN_SRC shell :tangle no
+pip install rope_py3k
+pip install flake8
+# for automatic imports
+pip install importmagic
+# Automatic pep8 formatting
+pip install autopep8
+# yapf for code formatting
+pip install yapf
+#+END_SRC
+
 
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
@@ -659,15 +828,22 @@ documentation on autocomplete.   Finally, use =ipython= for our REPL.
 )
 #+END_SRC
 
-Note that often I will want to edit a file that doesn't conform to
-pep8.  To disable flycheck (which calls pep8 and flake8) you should
-uncomment the following lines.  I wish the code I looked at was better
-and I didn't have to disable :)
-
+Install the =pydoc= package for documentation
 #+BEGIN_SRC emacs-lisp
-;(setq elpy-modules
-;    (quote
-;     (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
+(use-package pydoc
+ :ensure t
+)
+#+END_SRC
+
+*Non-pep compliant code:* Note that often I will want to edit a file
+that doesn't conform to pep8.  To disable flycheck (which calls pep8
+and flake8) you should uncomment the following lines.  I wish the code
+I looked at was better and I didn't have to disable :)
+
+#+BEGIN_SRC emacs-lisp :tangle no
+  (setq elpy-modules
+     (quote
+      (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
 #+END_SRC
 
 This installs PEP8 tools:
@@ -678,7 +854,7 @@ This installs PEP8 tools:
 )
 #+END_SRC
 
-** OCaml
+* OCaml
 Everything OCaml related is done out of opam, not the default emacs
 package sites. This was taken from the opam =user-setup= package and
 Ivan's configuration.
@@ -765,7 +941,7 @@ We also need to configure =utop=:
 (autoload 'utop "utop" "Toplevel for OCaml" t)
 #+END_SRC
 
-*** Set up ott
+** Set up ott
 I install ott from =opam=, so I don't include it in the package
 manager.  Note that ott's emacs config needs a specialized path (which
 seems normal for opam for some reason).
@@ -776,7 +952,7 @@ seems normal for opam for some reason).
 )
 #+END_SRC
 
-*** =bap.mli= register key is =b=
+** =bap.mli= register key is =b=
 I like to be able to quickly reference =bap.mli= from anywhere. I bind
 looking at this file currently to the =b= register.  Reminder: to
 access this press =C-x r j= and press =b= at the prompt.
@@ -786,7 +962,7 @@ access this press =C-x r j= and press =b= at the prompt.
                          (opam-lib-path "/bap/bap.mli")))
 #+END_SRC
 
-** OSX
+* OSX
 #+BEGIN_SRC emacs-lisp
 (use-package osx-browse
  :ensure t
@@ -794,8 +970,8 @@ access this press =C-x r j= and press =b= at the prompt.
  (setq browse-default-macosx-browser 'osx-browse-url)
 )
 #+END_SRC
-** YAML and Markdown
-*** Markdown
+* YAML and Markdown
+** Markdown
 I use two markdown modules current: markdown-mode for editing, and the
 github markdown API for rendering via gh-md
 
@@ -808,7 +984,7 @@ github markdown API for rendering via gh-md
 )
 #+END_SRC
 
-*** YAML and RAML
+** YAML and RAML
 RAML is a markup language based on YAML. There is currently no RAML
 mode, but YAML is close enough.
 
@@ -819,8 +995,8 @@ mode, but YAML is close enough.
     (add-to-list 'auto-mode-alist '("\\.raml\\'" . yaml-mode))
 )
 #+END_SRC
-** Latex/Docview setup
-*** Install packages
+* Latex/Docview setup
+** Install packages
 
 One thing that took me awhile to figure out is that the package auctex
 is not called auctex.  [[http://superuser.com/questions/737835/cannot-run-auctex-on-emacs][One post]] suggests to require =tex=, while the
@@ -839,7 +1015,7 @@ seems to work.
   )
 #+END_SRC
 
-*** Setup auctex basics
+** Setup auctex basics
 #+BEGIN_SRC emacs-lisp
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;; LATEXMK and AUCTEX ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -926,7 +1102,7 @@ seems to work.
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #+END_SRC
 
-*** Turn on reftex and set default bibliography
+** Turn on reftex and set default bibliography
 
 #+BEGIN_SRC emacs-lisp
 (add-hook 'latex-mode-hook 'turn-on-reftex)
@@ -934,7 +1110,7 @@ seems to work.
 (setq reftex-default-bibliography '("DBrumley.bib"))
 #+END_SRC
 
-*** handy in-emacs pdf navigation
+** handy in-emacs pdf navigation
 In docview mode, creates key bindings so that =M-[= and =M-]= move forward
 and backward while keeping your cursor within the buffer. useful for
 reviewing papers so you can write notes as you read.  Taken from
@@ -947,7 +1123,7 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
 
-** Langtool
+* Langtool
 I found this handy tool for doing grammar checking referenced [[https://joelkuiper.eu/spellcheck_emacs][here]]
 called langtool.  It unfortunately requires Java be installed, but it
 does seem handy.
@@ -966,7 +1142,7 @@ explanation and suggestion for correcting.
 )
 #+END_SRC
 
-** Writegood
+* Writegood
 We want to be able to check for "weasel" words et al. This is a handy
 package, and also referenced on [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might]]'s blog. I enable this mode
 by default for latex and for text files.
@@ -986,15 +1162,15 @@ by default for latex and for text files.
 )
 #+END_SRC
 
-** Shortcuts and Registers
+* Shortcuts and Registers
 
 
-*** Registers
+** Registers
 I use registers to open up specific files (I'm saving shortcuts for
 keyboard macros).  While surely an old idea, I'm trying to template
 after [[http://sachachua.com/blog/2015/02/learn-take-notes-efficiently-org-mode/][Sacha Chua]]'s emacs here.
 
-*** Bind goto-line
+** Bind goto-line
 Even though line numbers are "evil", I like them. Usually goto-line is
 M-g M-g, but here I make it C-c C-g since that is usually not bound
 anyway by default and control is easier for me to go to than escape.
@@ -1006,12 +1182,23 @@ anyway by default and control is easier for me to go to than escape.
 #+RESULTS:
 : goto-line
 
-*** Set up =C-h C-m= for discover-my-major
+** Set up =C-h C-m= for discover-my-major
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-h C-m") 'discover-my-major)
 #+END_SRC
 
-** TODO Turn on flyspell mode for text
+* TESTING
+#+BEGIN_SRC emacs-lisp
+(use-package gitlab
+:ensure t
+:config
+ (progn
+  (setq gitlab-host "https://geeklab.forallsecure.com")
+  (setq gitlab-username "dbrumley")
+ )
+)
+#+END_SRC
+* TODO Turn on flyspell mode for text
 #+BEGIN_SRC emacs-lisp
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
@@ -1044,5 +1231,11 @@ buffer.
 Discover my major will show you key bindings in the current major
 mode. By default the key binding is =C-h C-m=.
 
+* Visible Bell Bug Workaround
+Work around [[https://www.reddit.com/r/emacs/comments/3omsr2/weird_display_issue_in_os_x/][OSX bug in El Capitan]] regarding blurred square that kind
+of looks like a magnifying glass. It tursn
 
-* Test
+#+BEGIN_SRC emacs-lisp
+(setq visible-bell nil)
+
+#+END_SRC
