@@ -49,37 +49,29 @@ is FQDN.
 
 ** Set up the right profile information and shell
 
-Taken from
-https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage
+The shell command setup for OSX is a bit of a mess when you run =M-x
+compile=.
+  - =opam= wants to have a bunch of environment variables set, which
+    are typically defined by =eval `opam config env`=.
+  - =elpy= and =python= use virtual environments, and need to make
+    sure that they can *prepend* to the path variable the virtualenv
+    directory.
 
-If you are using compilation mode in Emacs.app it is likely that you
-won't have a correct environment (this can simply be checked by
-issuing env as the compilation command). There are various tips that
-will tell you how to adjust your =$PATH=, but it's not enough, there are
-other environment variables setup by opam.
+If you read the [[https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage][opam faq on OSX]], it will say to do this:
 
-A simple solution to this problem is to invoke the compilation mode
-shell as a login shell; this will read your =.profile= or =.bash_profile=
-file and everything should be setup correctly.
-
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (cond
  ((eq window-system 'ns) ; macosx
   ;; Invoke login shells, so that .profile or .bash_profile is read
   (setq shell-command-switch "-lc")))
-#+END_SRC
-
-The subshell invoked through M-x shell tries to read from
-=~/.emacs_$SHELL= or =~/.emacs.d/init_$SHELL.sh= which is not very
-convenient maintenance wise. Like for compilation mode the easiest is
-to invoke the subshell as a login shell as this will read your
-=.profile= or =.bash_profile=. This can be achieved by settings the
-variable =explicit-$SHELL-args= in your =.emacs=. So for example if you
-are using bash just add:
-
-#+BEGIN_SRC emacs-lisp
 (setq explicit-bash-args '("--login" "-i"))
 #+END_SRC
+
+This will make sure you bash is run as a login shell, reading through
+=.bash_profile=.  This will fix opam, but break elpy virtualenvs.
+
+
+
 
 ** Use the system defined web browser
 
