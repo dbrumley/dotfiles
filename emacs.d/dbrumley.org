@@ -545,6 +545,9 @@ Set up our default directory and default org capture.
 #+END_SRC
 
 
+
+#+END_SRC
+
 Make sure org knows about all the languages we use
 #+BEGIN_SRC emacs-lisp
 (org-babel-do-load-languages
@@ -553,7 +556,7 @@ Make sure org knows about all the languages we use
      (emacs-lisp . t)
      (ocaml . t)
      (python . t)
-     ;(shell . t)
+     (sh . t)
      (C . t)
     )
 )
@@ -724,6 +727,25 @@ installed).
 ;(require 'org-bullets)
 #+END_SRC
 
+* Projectile
+
+[[http://batsov.com/projectile/][Projectile]] is a project interaction library for Emacs. This
+configuration option installs it and enables it globally.
+
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t
+  :config (projectile-global-mode)
+)
+#+END_SRC
+
+Here are a couple of useful keystrokes.
+#+BEGIN_EXAMPLE emacs-lisp
+C-c p p ;; switch projects
+C-c p f ;; list project files
+C-c p g ;; grep project
+#+END_EXAMPLE
+
 * Python
 
 In Python, I use =elpy=, and so far am quite happy with it. I use it
@@ -799,24 +821,42 @@ $ ipython --version
 3.1.0
 #+END_SRC
 
+
 ** Emacs configuration
 I install =elpy= via MELPA (set up above).
 
-Before using =elpy=, install the =pip= dependencies:
+Before using =elpy=, install the =pip= dependencies for
+  * =flake8= to check python code (a linter)
+  * =rope=, a python refactoring library (the appropriate version for
+    your python install)
+  * =jedi=, a python autocompletion library
+  * =yapf= to beautiful python files and buffers
+  * =autopep8= to make sure code is PEP8 compliant
+  * =importmagic= to automatically add, remove, and manage imports
 
+On my system, I do:
 #+BEGIN_SRC shell :tangle no
 pip install rope_py3k
 pip install flake8
-# for automatic imports
 pip install importmagic
-# Automatic pep8 formatting
 pip install autopep8
-# yapf for code formatting
 pip install yapf
+pip install jedi
 #+END_SRC
 
+Now, install and configure elpy. We set:
+ * =ipython= as the python evaluation engine
+ * Use company mode (completion mode) for quick help
 
 #+BEGIN_SRC emacs-lisp
+(use-package company-quickhelp
+  :ensure t
+)
+
+(use-package company-jedi
+  :ensure t
+)
+
 (use-package elpy
   :ensure t
   :config
@@ -851,6 +891,17 @@ This installs PEP8 tools:
 (use-package py-autopep8
   :ensure t
   :config (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+)
+#+END_SRC
+
+=iedit= mode allows you to edit all variable instances in a buffer at
+once. Useful for renaming.  This trick comes from
+https://www.youtube.com/watch?v=mflvdXKyA_g&index=7&list=PLq326Pjb1tngGuj02SGmob7phCkSggOKJ
+
+The default keymap is =M-;=
+#+BEGIN_SRC emacs-lisp
+(use-package iedit
+:ensure t
 )
 #+END_SRC
 
@@ -998,7 +1049,7 @@ mode, but YAML is close enough.
 * Latex/Docview setup
 ** Install packages
 
-One thing that took me awhile to figure out is that the package auctex
+   One thing that took me awhile to figure out is that the package auctex
 is not called auctex.  [[http://superuser.com/questions/737835/cannot-run-auctex-on-emacs][One post]] suggests to require =tex=, while the
 =use-package= documents suggest =tex-site=.  I do the latter, and it
 seems to work.
@@ -1197,6 +1248,16 @@ anyway by default and control is easier for me to go to than escape.
   (setq gitlab-username "dbrumley")
  )
 )
+#+END_SRC
+* Testing pdf-tools - NO RETINA
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+  ;; TeX-source-correlate-start-server t)
+  ;; (unless (assoc "PDF Tools" TeX-view-program-list-builtin)
+  ;;     (push '("PDF Tools" TeX-pdf-tools-sync-view) TeX-view-program-list))
+
 #+END_SRC
 * TODO Turn on flyspell mode for text
 #+BEGIN_SRC emacs-lisp
