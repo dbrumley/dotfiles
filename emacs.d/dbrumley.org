@@ -906,30 +906,19 @@ Note that to use a dynamically generated load path, we must inform the
 byte-compiler of the definition so that the value is available. See
 the [[https://github.com/jwiegley/use-package][use-package]] documentation.
 
-First, we define some utility functions that give us easy access to
-locations under our opam install directory.
+We use =opam-user-setup=
 #+BEGIN_SRC emacs-lisp
-  (defun opam-share-path (path)
-    (let ((opam-share-dir
-           (shell-command-to-string "echo -n `opam config var share`"))
-    ) (concat opam-share-dir "/" path))
-  )
-
-  (defun opam-lib-path (path)
+(require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
+(defun opam-lib-path (path)
     (let ((opam-share-dir
            (shell-command-to-string "echo -n `opam config var lib`")))
       (concat opam-share-dir "/" path)
     )
-  )
-  (defun opam-bin-path (path)
-    (let ((opam-share-dir
-           (shell-command-to-string "echo -n `opam config var bin`")))
-      (concat opam-share-dir "/" path)))
-
+ )
 #+END_SRC
 
 First, load up ocp-indent, as we should never be manually indenting.
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package ocp-indent
     :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
   )
@@ -948,7 +937,7 @@ Second, load up merlin.  We set some preferences:
 Note that on some systems =tuareg-font-lock-symbols= causes huge
 performance issues; if this happens just comment it out.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package merlin
     :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
     :config
@@ -979,7 +968,7 @@ performance issues; if this happens just comment it out.
 #+END_SRC
 
 We also need to configure =utop=:
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 ;; Automatically load utop.el
 (autoload 'utop "utop" "Toplevel for OCaml" t)
 #+END_SRC
@@ -989,7 +978,7 @@ I install ott from =opam=, so I don't include it in the package
 manager.  Note that ott's emacs config needs a specialized path (which
 seems normal for opam for some reason).
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package ottmode
   :load-path (lambda () (list (opam-share-path "/ott/emacs")))
 )
