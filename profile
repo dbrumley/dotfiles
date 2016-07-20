@@ -62,13 +62,6 @@ export CLICOLOR=1
 export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
 
 
-# MacPorts Installer addition on 2015-04-05_at_11:27:40: adding an appropriate PATH variable for use with MacPorts.
-export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
-
-# I install with pip using --user; this is the default bin dir for 
-# the resulting files.
-export PATH=/Users/dbrumley/Library/Python/2.7/bin/:$PATH
-
 # Make `pip install` install with --user by default
 #pip() {
 #  if [ "$1" = "install" -o "$1" = "bundle" ]; then
@@ -90,3 +83,6 @@ export SMTPSERVER="smtp.gmail.com"
 # Enable autocomplete in git
 source /opt/local/etc/bash_completion.d/git-copmletion.bash
 export PATH=${PATH}:/Applications/IDA\ Pro\ 6.8/IDA\ binaries
+
+# Graphviz for plantuml
+export GRAPHVIZ_DOT=/opt/local/bin/dot
