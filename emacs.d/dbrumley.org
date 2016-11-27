@@ -47,6 +47,11 @@ is FQDN.
     (setq system-name (car (split-string system-name "\\."))))
 #+END_SRC
 
+** OSX Copy and Paste
+#+BEGIN_SRC emacs-lisp
+(setq x-select-enable-clipboard t)
+#+END_SRC
+
 ** Set up the right profile information and shell
 
 The shell command setup for OSX is a bit of a mess when you run =M-x
@@ -90,11 +95,11 @@ The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.
 
 ** Add macports to path
 Among other things, this allows emacs to find ispell (aka aspell).
-Note that I'm putting =/opt/local/bin= before the normal system
+Note that I'm putting =/usr/local/bin= before the normal system
 path on purpose.
 
 #+BEGIN_SRC emacs-lisp
-  (setq exec-path (append '("/opt/local/bin") exec-path))
+  (setq exec-path (append '("/usr/local/bin") exec-path))
 #+END_SRC
 
 * Initial Preferences
@@ -475,13 +480,14 @@ it is.
 * mu4e
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/")
 (require 'mu4e)
 (setq mu4e-mu-binary "/usr/local/bin/mu")
 (setq mu4e-maildir "~/Mail/Gmail-mbsync")
 (setq mu4e-view-show-images t)
 (setq mu4e-view-prefer-html t)
-(setq mu4e-html2text-command "w3m -dump -T text/html")
+;(setq mu4e-html2text-command "w3m -dump -T text/html")
+;(setq mu4e-html2text-command 'mu4e-shr2text)
 (setq mu4e-use-fancy-chars t)
 (setq mu4e-headers-skip-duplicates t)
 (setq mu4e-get-mail-command "mbsync gmail")
@@ -490,6 +496,9 @@ it is.
 (add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
 (setq mu4e-compose-signature-auto-include t)
 (setq message-signature-file "~/.emacs.d/signature.txt")
+(setq smtpmail-queue-mail nil ;; start in normal mode
+  smtpmail-queue-dir "~/Mail/queue/cur"
+)
 #+END_SRC
 
 And sending mail
@@ -504,6 +513,28 @@ And sending mail
       smtpmail-smtp-user "dbrumley@gmail.com")
 (setq starttls-extra-arguments '("--x509cafile"
 "/usr/local/etc/ssl/certs/ca-certificates.crt"))
+#+END_SRC
+
+And gmail shortcuts:
+#+BEGIN_SRC emacs-lisp
+(setq mu4e-drafts-folder "/[Gmail].Drafts")
+(setq mu4e-sent-folder   "/[Gmail].Sent Mail")
+(setq mu4e-trash-folder  "/[Gmail].Trash")
+(setq mu4e-maildir-shortcuts
+    '( ("/INBOX"               . ?i)
+       ("/[Gmail].Sent Mail"   . ?s)
+       ("/[Gmail].Trash"       . ?t)
+       ("/[Gmail].All Mail"    . ?a)))
+#+END_SRC
+
+And a couple of small customizations:
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'mu4e-view-actions
+  '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+
+(add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
+
+(add-hook 'mu4e-view-mode-hook 'visual-line-mode)
 #+END_SRC
 
 * Org mode
@@ -858,6 +889,8 @@ Now, install and configure elpy. We set:
     (elpy-use-ipython)
   )
 )
+(setq python-shell-interpreter "ipython"
+    python-shell-interpreter-args "--simple-prompt -i")
 #+END_SRC
 
 Install the =pydoc= package for documentation
@@ -1174,6 +1207,54 @@ explanation and suggestion for correcting.
 )
 #+END_SRC
 
+* Web
+I get most of my web configuration, especially for react, from
+[[http://codewinds.com/blog/2015-04-02-emacs-flycheck-eslint-jsx.html]]
+
+#+BEGIN_SRC emacs-lisp
+(use-package js2-mode
+ :ensure t
+)
+(use-package flycheck
+ :ensure t)
+(use-package json-mode
+ :ensure t)
+(use-package web-mode
+  :ensure t)
+
+;; use web-mode for .jsx files
+(add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
+
+;; http://www.flycheck.org/manual/latest/index.html
+(require 'flycheck)
+
+;; turn on flychecking globally
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
+;; disable jshint since we prefer eslint checking
+(setq-default flycheck-disabled-checkers
+  (append flycheck-disabled-checkers
+    '(javascript-jshint)))
+
+;; use eslint with web-mode for jsx files
+(flycheck-add-mode 'javascript-eslint 'web-mode)
+
+;; customize flycheck temp file prefix
+(setq-default flycheck-temp-prefix ".flycheck")
+
+;; disable json-jsonlist checking for json files
+(setq-default flycheck-disabled-checkers
+  (append flycheck-disabled-checkers
+    '(json-jsonlist)))
+
+;; This is from the webpage, but done already.
+;; https://github.com/purcell/exec-path-from-shell
+;; only need exec-path-from-shell on OSX
+;; this hopefully sets up path and other vars better
+;(when (memq window-system '(mac ns))
+;  (exec-path-from-shell-initialize))
+#+END_SRC
+
 * Writegood
 We want to be able to check for "weasel" words et al. This is a handy
 package, and also referenced on [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might]]'s blog. I enable this mode
@@ -1219,6 +1300,12 @@ anyway by default and control is easier for me to go to than escape.
 (global-set-key (kbd "C-h C-m") 'discover-my-major)
 #+END_SRC
 
+* Custom Macros
+Useful for inserting the current date:
+#+BEGIN_SRC emacs-lisp
+ (defun insert-current-date () (interactive)
+    (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
+#+END_SRC
 * TESTING
 #+BEGIN_SRC emacs-lisp
 (use-package gitlab
