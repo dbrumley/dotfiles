@@ -7,9 +7,8 @@ literate programming for her Emacs configuration.
 
 My =~/.emacs.d/init.el= file starts off simply:
 #+begin_src emacs-lisp :tangle no
+(package-initialize)
 (require 'package)
-(add-to-list 'load-path "~/.emacs.d/elisp/org-mode/lisp")
-(add-to-list 'load-path "~/.emacs.d/elisp/org-mode/contrib/lisp" t)
 (org-babel-load-file "~/.emacs.d/dbrumley.org")
 #+end_src
 
@@ -76,8 +75,6 @@ This will make sure you bash is run as a login shell, reading through
 =.bash_profile=.  This will fix opam, but break elpy virtualenvs.
 
 
-
-
 ** Use the system defined web browser
 
 #+BEGIN_SRC emacs-lisp
@@ -93,7 +90,7 @@ The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.
 (prefer-coding-system 'utf-8)
 #+END_SRC
 
-** Add macports to path
+** Ensure brew is in the path
 Among other things, this allows emacs to find ispell (aka aspell).
 Note that I'm putting =/usr/local/bin= before the normal system
 path on purpose.
@@ -483,14 +480,16 @@ it is.
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/")
 (require 'mu4e)
 (setq mu4e-mu-binary "/usr/local/bin/mu")
-(setq mu4e-maildir "~/Mail/Gmail-mbsync")
+(setq mu4e-maildir "/Users/dbrumley/Mail/Gmail-mbsync")
 (setq mu4e-view-show-images t)
 (setq mu4e-view-prefer-html t)
 ;(setq mu4e-html2text-command "w3m -dump -T text/html")
 ;(setq mu4e-html2text-command 'mu4e-shr2text)
+; See if this speeds things up.
 (setq mu4e-use-fancy-chars t)
 (setq mu4e-headers-skip-duplicates t)
 (setq mu4e-get-mail-command "mbsync gmail")
+;(setq mu4e-get-mail-command "offlineimap")
 (setq mu4e-update-interval 300)
 (setq mu4e-attachment-dir  "~/Downloads")
 (add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
@@ -948,10 +947,16 @@ We use =opam-user-setup=
       (concat opam-share-dir "/" path)
     )
  )
+(defun opam-share-path (path)
+(let ((opam-share-dir
+      (shell-command-to-string "echo -n `opam config var share`")))
+      (concat opam-share-dir "/" path)
+)
+)
 #+END_SRC
 
 First, load up ocp-indent, as we should never be manually indenting.
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package ocp-indent
     :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
   )
@@ -970,7 +975,7 @@ Second, load up merlin.  We set some preferences:
 Note that on some systems =tuareg-font-lock-symbols= causes huge
 performance issues; if this happens just comment it out.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package merlin
     :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
     :config
@@ -1001,7 +1006,7 @@ performance issues; if this happens just comment it out.
 #+END_SRC
 
 We also need to configure =utop=:
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
 ;; Automatically load utop.el
 (autoload 'utop "utop" "Toplevel for OCaml" t)
 #+END_SRC
@@ -1306,6 +1311,13 @@ Useful for inserting the current date:
  (defun insert-current-date () (interactive)
     (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
 #+END_SRC
+
+Mark done and archive orgmode:
+#+BEGIN_SRC emacs-lisp
+(fset 'org-done-archive
+   [?\C-c ?\C-t ?x escape ?x ?o ?r ?g ?- ?a ?r ?c ?h ?i return])
+#+END_SRC
+
 * TESTING
 #+BEGIN_SRC emacs-lisp
 (use-package gitlab
