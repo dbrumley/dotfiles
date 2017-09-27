@@ -11,3 +11,4 @@ EXT ounit
 EXT here
 EXT nonrec
 PKG core
+FLG -short-paths
