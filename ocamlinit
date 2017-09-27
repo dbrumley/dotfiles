@@ -3,16 +3,14 @@ let () =
   try Topdirs.dir_directory (Sys.getenv "OCAML_TOPLEVEL_PATH")
   with Not_found -> ()
 ;;
-#use "topfind";;
 #thread;;
-#camlp4o;;
-(* #require "core.top";;*)
-(* #require "core.syntax";; *)
-(* open Core.Std;;*)
+#use "topfind";;
 #require "core_kernel";;
+#require "core";;
+#require "bap";;
 open Core_kernel.Std;;
-(* ## added by OPAM user-setup for ocamltop / base ## d5b43c10ffbc4d9af79fea6e160104af ## you can edit, but keep this line *)
+open Bap.Std;;
+
+(* ## added by OPAM user-setup for ocamltop / base ## 3ec62baf6f9c219ae06d9814069da862 ## you can edit, but keep this line *)
 #use "topfind";;
-#thread;;
-#camlp4o;;
 (* ## end of OPAM user-setup addition for ocamltop / base ## keep this line *)
