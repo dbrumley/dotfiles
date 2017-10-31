@@ -476,7 +476,7 @@ it is.
 
 * mu4e
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/")
 (require 'mu4e)
 (setq mu4e-mu-binary "/usr/local/bin/mu")
@@ -501,7 +501,7 @@ it is.
 #+END_SRC
 
 And sending mail
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (require 'smtpmail)
 (require 'starttls)
 (setq message-send-mail-function 'smtpmail-send-it
@@ -515,7 +515,7 @@ And sending mail
 #+END_SRC
 
 And gmail shortcuts:
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (setq mu4e-drafts-folder "/[Gmail].Drafts")
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
 (setq mu4e-trash-folder  "/[Gmail].Trash")
@@ -527,7 +527,7 @@ And gmail shortcuts:
 #+END_SRC
 
 And a couple of small customizations:
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (add-to-list 'mu4e-view-actions
   '("ViewInBrowser" . mu4e-action-view-in-browser) t)
 
@@ -834,7 +834,7 @@ $ port select ipython
 When everything is installed correctly you should be able to run =pip=
 and =python3= and verify it's pointing to some variant of version 3.
 
-#+BEGIN_SRC shell tangle:no
+#+BEGIN_SRC shell :tangle no
 $ pip --version
 pip 8.1.1 from /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages (python 3.5)
 $ python3 --version
@@ -870,7 +870,7 @@ Now, install and configure elpy. We set:
  * =ipython= as the python evaluation engine
  * Use company mode (completion mode) for quick help
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package company-quickhelp
   :ensure t
 )
@@ -1203,7 +1203,7 @@ Executing =langtool-check-buffer= will check the buffer and highlight
 grammatical errors.  =langtool-correct-buffer= will bring up an
 explanation and suggestion for correcting.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package langtool
   :ensure t
   :config

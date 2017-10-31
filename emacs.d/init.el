@@ -11,7 +11,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (vagrant-tramp aggressive-indent bookmark+ git-messenger ob-ipython helm-projectile projectile lispy nlinum undo-tree org-plus-contrib use-package smex rainbow-mode python-mode pydoc magit key-chord jedi-direx ido-ubiquitous hydra ht helm-themes helm-bibtex git-timemachine flx-ido elpy elfeed eimp dired-details+ button-lock auctex ace-isearch))))
+    (exwm vagrant-tramp aggressive-indent bookmark+ git-messenger ob-ipython helm-projectile projectile lispy nlinum undo-tree org-plus-contrib use-package smex rainbow-mode python-mode pydoc magit key-chord jedi-direx ido-ubiquitous hydra ht helm-themes helm-bibtex git-timemachine flx-ido elpy elfeed eimp dired-details+ button-lock auctex ace-isearch))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

@@ -1,0 +1,27 @@
+
+;; ----- smex-history -----
+(
+ shell
+ merlin-restart-process
+ magit-status
+ magit-diff
+ org-insert-link
+ describe-key
+ global-set-key
+)
+
+;; ----- smex-data -----
+(
+ (package-install . 1)
+ (exwm-mode . 1)
+ (TeX-insert-quote . 1)
+ (set-variable . 1)
+ (exwm-workspace-switch . 1)
+ (global-set-key . 1)
+ (describe-key . 2)
+ (merlin-restart-process . 3)
+ (org-insert-link . 2)
+ (magit-status . 7)
+ (magit-diff . 1)
+ (shell . 1)
+)

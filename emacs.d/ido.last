@@ -1,0 +1,99 @@
+;;; -*- coding: utf-8 -*-
+
+;; ----- ido-last-directory-list -----
+(
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/" . "bap/")
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/libtrace/" . "src/")
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/" . "libtrace/")
+ ("/Users/dbrumley/git/CMU/dbrumley/svn-archive/archive/2017/" . "wenyuan-xu/")
+ ("/Users/dbrumley/git/CMU/dbrumley/svn-archive/" . "archive/")
+ ("/Users/dbrumley/git/CMU/dbrumley/" . "svn-archive/")
+ ("/Users/dbrumley/git/CMU/" . "dbrumley/")
+ ("/Users/dbrumley/git/" . "CMU/")
+ ("/Users/dbrumley/" . "git/")
+)
+
+;; ----- ido-work-directory-list -----
+(
+ "/Users/dbrumley/.emacs.d/"
+ "/Users/dbrumley/git/GitHub/dbrumley/exp-hashcons/"
+ "/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/ocaml-xed-bindings/"
+ "/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/"
+ "/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/docs/"
+ "/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/new_bap/"
+ "/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/bap/"
+ "/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/"
+ "/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/libtrace/src/"
+ "/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/piqi/"
+ "/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/lib/"
+ "/Users/dbrumley/git/CMU/dbrumley/svn-archive/archive/2017/wenyuan-xu/"
+ "/Users/dbrumley/Documents/"
+)
+
+;; ----- ido-work-file-list -----
+(
+ "dbrumley.org"
+ ".merlin"
+ "myocamlbuild.ml"
+ "opam"
+ "executor.ml"
+ "Style.org"
+ "new_bap_transpiler.ml"
+ "var.mli"
+ "ast.mli"
+ "new_bap_transpiler.mli"
+)
+
+;; ----- ido-dir-file-cache -----
+(
+ ("/Users/dbrumley/.emacs.d/" (23032 22513 60226 759000) "dbrumley.org" "elpa/" "dbrumley.el" ".gitignore" "init.el" "auto-save-list/" "projectile-bookmarks.eld" "opam-user-setup.el" "smex-items" "ido.last" "snippets/" "../" "./")
+
+ ("/Users/dbrumley/" (23031 38336 143701 242000) "git/" ".idapro/" ".viminfo" ".bash_history" ".cache/" ".python_history" "Downloads/" ".gem/" ".ocp/" ".ocamlinit" "Documents/" ".Trash/" ".profile" "Applications/" "Movies/" ".ssh/" "Dropbox (ForAllSecure)/" ".dropbox/" "Public/" "old.dropbox.unsynced/" ".bash_sessions/" ".cups/" ".emacs.d/" ".lesshst" "Library/" "Desktop/" ".opam/" "Pictures/" ".local/" "vagrant/" ".vagrant.d/" ".wget-hsts" ".CFUserTextEncoding" "VirtualBox VMs/" "targets.tgz" ".DS_Store" ".virtualenvs/" "Dropbox (Personal)/" "Music/" ".config/" "../" "./")
+
+ ("/Users/dbrumley/git/" (23021 63467 531792 753000) "forallsecure/" "GitHub/" "CMU/" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/" (23031 23781 884471 279000) "ivg/" "dbrumley/" "Dor1s/" "BinaryAnalysisPlatform/" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/dbrumley/" (23032 22200 853262 599000) "exp-hashcons/" "dotfiles/" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/dbrumley/exp-hashcons/" (23032 22567 216216 566000) "#exp-hashcons.ml#" ".merlin" "bap-hashcons.ml" "../" "./")
+
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/ocaml-xed-bindings/" (23031 36980 229141 323000) "src/" "generate_bindings.py" ".git/" "_build/" ".gitignore" "_tags" "README.md" "xed/" ".gitmodules" "META" "generate_stubs.ml" "Makefile" "myocamlbuild.ml" "mbuild/" "opam" "generated/" "../" "./")
+
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/docs/" (23031 24916 984176 791000) "DbiAndSeAPI.md" "Mayhem_Overview.png" "ARCHITECTURE.org" "Mayhem_Overview.pptx" "../" "./")
+
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/bap/" (23031 3876 95874 452000) "ast.mli" "pp.ml" "checks.ml" "ast_convenience.mli" "unroll.ml" "cfg.mli" "big_int_convenience.mli" "type.ml" "cfg_ast.mli" "readida.ml" "steensgard.ml" "reachable.mli" "arithmetic.ml" "prune_unreachable.mli" "cfg.ml" "ast_convenience.ml" "pp.mli" "typecheck.mli" "checks.mli" "typecheck.ml" "cfg_pp.ml" "dominator.ml" "var_temp.mli" "arithmetic.mli" "steensgard.mli" "disasm_i386.ml" "unroll.mli" "var.mli" "var_temp.ml" "reachable.ml" "type.mli" "var.ml" "prune_unreachable.ml" "disasm_i386.mli" "cfg_ast.ml" "ast.ml" "big_int_convenience.ml" "structural_analysis.ml" "../" "./")
+
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/new_bap/" (23031 3876 240015 103000) "new_bap_transpiler.mli" "new_bap_transpiler.ml" "new_bap.ml" "new_bap.mli" "x86_operands.ml" "x86_operands.mli" "../" "./")
+
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/src/executor/" (23031 3876 340855 354000) "variables.ml" "ksets.ml" "common_x86.ml" "concrete.ml" "protocol.ml" "client/" "summary_generator.ml" "shell.ml" "stmt_analysis.ml" "syscall/" "common.mli" "exp/" "rich.ml" "mayhem.ml" "options.ml" "instrumentation.ml" "cmd.ml" "interval_analysis.ml" ".gitignore" "controller.ml" "encode.ml" "targets.ml" "_tags" "analysis.ml" "smt_solver.ml" "testcase_file.ml" "reg_printer.ml" "formula.ml" "register.ml" "testcase.ml" "memory.ml" "useful.ml" "xed.ml" "META.z3ml" "arches.mli" "new_bap/" "statistics.ml" "introduction.ml" "smt_solver.mli" "main.ml" "rdisasm.ml" "exploitgen.ml" "tests/" "memory_model.ml" "logs.mli" "category.ml" "soundness_check.ml" "state.ml" "executor.ml" "bap/" "inputs.mli" "recover.ml" "taint_analysis.ml" "Makefile" "useful.mli" "formula.mli" "symbolic_execution.ml" "xed.mli" "summary.ml" "seed.ml" "inputs.ml" "ServerAPI.ml" "common.ml" "logs.ml" "terminate.ml" "state_util.ml" "arches.ml" "shims.ml" "../" "./")
+
+ ("/Users/dbrumley/vagrant/mayhem-dev/git/forallsecure/mayhem/" (23031 3875 932436 411000) "extras/" "src/" "dockerfiles/" ".git/" ".gitignore" ".dockerignore" "install_deps.sh" "README.md" "libs/" ".gitmodules" "release/" "Makefile" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/libtrace/src/" (23027 51353 666337 857000) "trace.container.hpp" "frame_arch.h" "copytrace.cpp" "Makefile.am" "readtrace.cpp" "trace.container.cpp" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/libtrace/" (23027 51353 665521 115000) "src/" "autogen.sh" "Makefile.am" "configure.ac" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/lib/" (23027 51353 664594 553000) "frame_reader.ml" "frame_events.mli" "frame_arch.ml" "frame_reader.mli" "frame_mach.ml" "frame_events.ml" ".merlin" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/" (23027 51353 671316 805000) ".git/" "lib/" ".gitignore" "_tags" "README.md" "_oasis" "plugin/" "piqi/" "Makefile" "configure" "test/" "LICENSE" "setup.ml" "myocamlbuild.ml" ".merlin" "libtrace/" "../" "./")
+
+ ("/Users/dbrumley/git/GitHub/BinaryAnalysisPlatform/bap-frames/piqi/" (23027 51353 668358 933000) "exceptionframe.piqi" "types.piqi" "frame.piqi" "keyframe.piqi" "metaframe.piqi" "modloadframe.piqi" "taintintroframe.piqi" "syscallframe.piqi" "stdframe.piqi" "../" "./")
+
+ ("/Users/dbrumley/git/CMU/dbrumley/svn-archive/archive/2017/wenyuan-xu/" (23013 19548 48514 795000) "shortcuts.sty" "proof.sty" "djb.sty" "setdim.sty" "letter.tex" "addrset.sty" "code.sty" "../" "./")
+
+ ("/Users/dbrumley/git/CMU/dbrumley/svn-archive/archive/2017/" (23013 19534 431675 569000) "wenyuan-xu/" "alex-rebert/" "zhiqiang_lin/" "tbao/" "flavio_garcia/" "franzi-roesner/" "../" "./")
+
+ ("/Users/dbrumley/git/CMU/dbrumley/svn-archive/archive/" (23012 58863 612193 782000) "2016/" "2011/" "2010/" "2017/" "2009/" "gradschool/" "2012/" "2015/" "2014/" "2013/" "../" "./")
+
+ ("/Users/dbrumley/git/CMU/dbrumley/svn-archive/" (23012 58868 848601 962000) "proposals/" ".git/" "cv/" "emacs-dir/" "rec-template/" "bibtex/" "emacs-config" "template/" "other/" "papers/" "archive/" "bio/" "../" "./")
+
+ ("/Users/dbrumley/git/CMU/dbrumley/" (23012 58801 202484 236000) "svn-archive/" "../" "./")
+
+ ("/Users/dbrumley/git/CMU/" (23012 58797 733058 0) "dbrumley/" "../" "./")
+
+ ("/Users/dbrumley/Documents/" (23012 50901 644048 996000) "Ind Rates Brkdn_QTR 3-4 2016 UPDATES.xlsx" "Zoom/" "WebEx/" "wenyuan.tex" ".localized" "../" "./")
+)
+
+;; ----- ido-unc-hosts-cache -----
+t
