@@ -1,405 +1,163 @@
 #+TITLE: David Brumley's Emacs Configuration
+#+AUTHOR: David Brumley
 #+OPTIONS: toc:4 h:4
+#+PROPERTY: header-args :tangle yes
 
-* About this file
-This file is inspired by [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua's Emacs Configuration]] using
-literate programming for her Emacs configuration.
+* Configuration
+:PROPERTIES:
+:VISIBILITY: children
+:END:
 
-My =~/.emacs.d/init.el= file starts off simply:
-#+begin_src emacs-lisp :tangle no
-(package-initialize)
-(require 'package)
-(org-babel-load-file "~/.emacs.d/dbrumley.org")
-#+end_src
+** Table of Contents :TOC_3_gh:
 
-The first line is needed to start up the package manager.
+** About this file
+This is an Emacs literate configuration template. It contains the
+basic structure of a literate config along with some optimizations to
+ensure a fast load time.
 
-The second and third make sure I use the git-installed orgmode.  I use
-the git version.  (I've not figured out how to use the
-org-plus-contrib from melpa so that I could a) use use-package, b) use
-the contrib packages.  I worked hours on this; I don't know
-why it wasn't working.)
+** Org File Tweaks
+There are a few tweaks included in this org file that make it a little
+easier to work with.
 
+*** Automatically Tangle
+First there is a property defined on the file:
 
-The fourth says to load the rest from my org file. Note that the
-=:tangle no= says that the above line is *not* exported as source as
-this is just an example. Future lines will not have that directive.
+#+BEGIN_SRC :tangle no
+header-args :tangle yes
+#+END_SRC
 
-* Personal information
-Set up my name and email address.
+This tells emacs to automatically tangle (include) all code blocks in
+this file when generating the code for the config, unless the code
+block explicitly includes =:tangle no= as the above code block does.
+
+*** Visibility Settings
+
+Next we have a property defined on the [[Configuration][Configuration]] heading that
+defines the visibility that tells org to show it's direct children on
+startup. This way a clean outline of all sub headings under
+Configuration is shown each time this file is opened in org-mode.
+
+*** Table of Contents
+
+Finally, there is a [[Table of Contents][Table of Contents]] heading that includes the tag:
+=:TOC_3_gh:=. This tells an org-mode package =toc-org= to generate a
+table of contents under this heading that has a max depth of 3 and is
+created using Github-style hrefs. This table of contents is updated
+everytime the file is saved and makes for a functional table of
+contents that works property directly on github.
+
+** Personal Information
+Let's set some variables with basic user information.
 
 #+BEGIN_SRC emacs-lisp
 (setq user-full-name "David Brumley"
-      user-mail-address "dbrumley@cmu.edu")
+      user-mail-address "dbrumley@forallsecure.com")
 #+END_SRC
 
-* Basic OS configuration
-This section should only include OS-specific things.
-** OS X behaviors
-According to the [[https://github.com/eschulte/emacs24-starter-kit/blob/master/starter-kit.org][starter kit]], there is a bug on OS X where system-name
-is FQDN.
+** Emacs Initialization
+*** Settings
+We're going to increase the gc-cons-threshold to a very high number to
+decrease the load and compile time.  We'll lower this value
+significantly after initialization has completed. We don't want to
+keep this value too high or it will result in long GC pauses during
+normal usage.
 
 #+BEGIN_SRC emacs-lisp
-(if (or
-    (eq system-type 'darwin)
-    (eq system-type 'berkeley-unix))
-    (setq system-name (car (split-string system-name "\\."))))
+(eval-and-compile
+  (setq gc-cons-threshold 402653184
+        gc-cons-percentage 0.6))
 #+END_SRC
 
-** OSX Copy and Paste
-#+BEGIN_SRC emacs-lisp
-(setq x-select-enable-clipboard t)
-#+END_SRC
-
-** Set up the right profile information and shell
-
-The shell command setup for OSX is a bit of a mess when you run =M-x
-compile=.
-  - =opam= wants to have a bunch of environment variables set, which
-    are typically defined by =eval `opam config env`=.
-  - =elpy= and =python= use virtual environments, and need to make
-    sure that they can *prepend* to the path variable the virtualenv
-    directory.
-
-If you read the [[https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage][opam faq on OSX]], it will say to do this:
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(cond
- ((eq window-system 'ns) ; macosx
-  ;; Invoke login shells, so that .profile or .bash_profile is read
-  (setq shell-command-switch "-lc")))
-(setq explicit-bash-args '("--login" "-i"))
-#+END_SRC
-
-This will make sure you bash is run as a login shell, reading through
-=.bash_profile=.  This will fix opam, but break elpy virtualenvs.
-
-
-** Use the system defined web browser
+Disable certain byte compiler warnings to cut down on the noise. This
+is a personal choice and can be removed if you would like to see any
+and all byte compiler warnings.
 
 #+BEGIN_SRC emacs-lisp
-(setq browse-url-browser-function 'browse-url-default-macosx-browser)
+  (setq byte-compile-warnings '(not free-vars unresolved noruntime
+  lexical make-local))
 #+END_SRC
 
-** Set up UTF-8
-The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.org/emacs/EmacsForMacOS][Emacs Wiki]]
+*** Package Management
+
+**** Package Settings
+
+We're going to set the =load-path= ourselves and avoid calling
+=(package-initilize)= (for performance reasons) so we need to set
+=package--init-file-ensured= to true to tell =package.el= to not
+automatically call it on our behalf. Additionally we're setting
+=package-enable-at-startup= to nil so that packages will not
+automatically be loaded for us since =use-package= will be handling
+that.
 
 #+BEGIN_SRC emacs-lisp
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(prefer-coding-system 'utf-8)
+  (eval-and-compile
+    (setq load-prefer-newer t
+          package-user-dir "~/.emacs.d/elpa"
+          package--init-file-ensured t
+          package-enable-at-startup nil)
+
+    (unless (file-directory-p package-user-dir)
+      (make-directory package-user-dir t)))
 #+END_SRC
 
-** Ensure brew is in the path
-Among other things, this allows emacs to find ispell (aka aspell).
-Note that I'm putting =/usr/local/bin= before the normal system
-path on purpose.
+**** Use-Package Settings
+Tell =use-package= to always defer loading packages unless explicitly
+told otherwise. This speeds up initialization significantly as many
+packages are only loaded later when they are explicitly used.
 
 #+BEGIN_SRC emacs-lisp
-  (setq exec-path (append '("/usr/local/bin") exec-path))
+  (setq use-package-always-defer t
+        use-package-verbose t)
 #+END_SRC
 
-* Initial Preferences
-** bind =dbrumley.org= =d= register
-I bind a register key to =dbrumley.org= because I find myself editing
-it often.  I put this at the top because I want it available even if
-something else doesn't load.
-
-Reminder: to access this press =C-x r j= and press =d= at the
-prompt. I initially found this hard to remember until I figured out:
-  * =C-x= means execute in emacs
-  * =r= is register
-  * =j= is jump
-So overall I think of this as "execute the command register jump",
-which is very logical if you think about it.
+**** Manually Set Load Path
+We're going to set the load path ourselves so that we don't have to
+call =package-initialize= at runtime and incur a large performance
+hit. This load-path will actually be faster than the one created by
+=package-initialize= because it appends the elpa packages to the end
+of the load path.  Otherwise any time a builtin package was required
+it would have to search all of third party paths first.
 
 #+BEGIN_SRC emacs-lisp
-  (set-register ?d (cons 'file "~/.emacs.d/dbrumley.org"))
-  (set-register ?t (cons 'file "~/Dropbox/org-mode/todo.org"))
-#+END_SRC
-** Turn off splash screen
-#+BEGIN_SRC emacs-lisp
-(setq inhibit-splash-screen t)
+  (eval-and-compile
+    (setq load-path (append load-path (directory-files package-user-dir t "^[^.]" t))))
 #+END_SRC
 
-** Highlight matching parentheses
-#+BEGIN_SRC emacs-lisp
-(show-paren-mode 1)
-#+END_SRC
+**** Initialize Package Management
+Next we are going to require =package.el= and add our additional
+package archives, 'melpa' and 'org'.  Afterwards we need to initialize
+our packages and then ensure that =use-package= is installed, which we
+promptly install if it's missing. Finally we load =use-package= and
+tell it to always install any missing packages.
 
-** Turn off tabs
-#+BEGIN_SRC emacs-lisp
-  (set-default 'indent-tabs-mode nil)
-#+END_SRC
+Note that this entire block is wrapped in =eval-when-compile=. The
+effect of this is to perform all of the package initialization during
+compilation so that when byte compiled, all of this time consuming
+code is skipped. This can be done because the result of byte compiling
+=use-package= statements results in the macro being fully expanded at
+which point =use-package= isn't actually required any longer.
 
-** Indicate empty lines
-#+BEGIN_SRC emacs-lisp
-  (set-default 'indicate-empty-lines t)
-#+END_SRC
-
-** Turn on auto-fill for text mode
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'text-mode-hook 'turn-on-auto-fill)
-#+END_SRC
-
-** Turn off backup files
-#+BEGIN_SRC emacs-lisp
-  (set-default 'make-backup-files nil)
-#+END_SRC
-
-** Change "yes or no" to "y or n"
-#+BEGIN_SRC emacs-lisp
-(fset 'yes-or-no-p 'y-or-n-p)
-#+END_SRC
-** Turn off toolbar
-#+BEGIN_SRC emacs-lisp
-(tool-bar-mode -1)
-#+END_SRC
-** Put time in status bar
-#+BEGIN_SRC emacs-lisp
-  (setq display-time-day-and-date t display-time-24hr-format t)
-               (display-time)
-#+END_SRC
-** Delete trailing white space
-
-To remove trailing white space, Emacs v21 and greater has =M-x
-delete-training-whitespace=. This runs the command as part of the
-=before-save-hook=.
-#+BEGIN_SRC emacs-lisp
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-#+END_SRC
-
-Optionally, this could be done only in particular modes, e.g.,
-#+BEGIN_EXAMPLE emacs-lisp
-(add-hook 'c-mode-hook
-(lambda () (add-to-list 'write-file-functions
-                        'delete-trailing-whitespace)))
-#+END_EXAMPLE
-
-* Basic Packages and Configuration
-I put here more fundamental packages, with more programming-specific
-or involved configurations at the top level.
-
-** Set up external repositories
-I currently do not have marmalade, as melpa and org mode
-typically are good enough for me.
-#+BEGIN_SRC emacs-lisp
-(setq package-archives
-      '(("gnu"         . "http://elpa.gnu.org/packages/")
-        ("org"         . "http://orgmode.org/elpa/")
-        ("melpa"       . "http://melpa.org/packages/")))
-
-(require 'package)
-;;(setq package-enable-at-startup nil)
-(package-initialize)
-#+END_SRC
-
-Use =M-x package-refresh-contents= to reload the list of packages
-after adding this the first time, and subsequent edits.
-
-** =use-package= goodness
-I saw [[http://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]'s configuration used this thing called [[https://github.com/jwiegley/use-package][use-package]],
-and am trying it out for managing my list of packages to install
-automatically.
-
-Others also seem to love it, including [[http://www.lunaryorn.com/2015/01/06/my-emacs-configuration-with-use-package.html][Sebastian Wiesner]]'s blog.
-
-I've already added melpa to my package list.  Here I am going to
-bootstrap directly with emacs built-in package manager first.
+Since the code is automatically compiled during runtime, if the configuration hasn't already been
+previously compiled manually then all of the package initialization will still take place at startup.
 
 #+BEGIN_SRC emacs-lisp
-(require 'package)
+  (eval-when-compile
+    (require 'package)
 
+    (unless (assoc-default "melpa" package-archives)
+      (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t))
+    (unless (assoc-default "org" package-archives)
+      (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t))
 
-(package-initialize)
-
-;; Bootstrap `use-package'
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+    (package-initialize)
+    (unless (package-installed-p 'use-package)
+      (package-refresh-contents)
+      (package-install 'use-package))
+    (require 'use-package)
+    (setq use-package-always-ensure t))
 #+END_SRC
 
-According to the [[https://github.com/jwiegley/use-package][use-package github page]], the following will reduce
-startup time.
-#+BEGIN_SRC emacs-lisp
-(eval-when-compile
-  (require 'use-package))
-(require 'diminish)                ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
-#+END_SRC
-
-** Set up magit
-I've started using magit as part of my emacs-is-my-os effort.
-
-One question is whether to set magit-auto-revert-mode or not. The
-default is to set it, but there is an option to do:
-#+BEGIN_SRC emacs-lisp :tangle no
-  (setq magit-auto-revert-mode nil)
-#+END_SRC
-
-The warning message is quite scary, and says that if enabled (which is
-the default), you may have data loss. The [[https://github.com/magit/magit/issues/1783][author maintains]] that
-updating every time you do a git pull might be annoying. I'm going
-with his advice here; hope I'm not shooting myself in the foot.
-
-The below binds =C-x v d= to =magit-status=.
-
-#+BEGIN_SRC emacs-lisp
-(use-package magit
-  :ensure t
-  :init
-  ;; disable scary warning
-  (setq magit-last-seen-setup-instructions "1.4.0")
-  :bind (("C-x v d" . magit-status))
-)
-#+END_SRC
-
-** Set up ido, and run it on all the things
-Currently I'm using ido mode.  I should try out helm (suppose to be
-better), but currently that is just a todo for me.
-
-#+BEGIN_SRC emacs-lisp
-(use-package ido
-  :ensure t
-  :init
-  (progn
-    (ido-mode t)
-    (setq ido-enable-flex-matching t)
-    (setq ido-everywhere t)
-  )
-)
-#+END_SRC
-
-I also like to have the list of completions listed vertically, not
-horizontally.
-#+BEGIN_SRC emacs-lisp
-(use-package ido-vertical-mode
-  :ensure t
-)
-#+END_SRC
-** Set up company mode
-I use [[http://company-mode.github.io/][company mode]] for auto-completion.  Funny story: I thought
-company mode was some sort of corporate mode. It actually stands for
-"complete anything".  Note this is use by elpy for python, but I have
-it here since it works with most languages.  I also enable it globally
-via the config hook.
-
-#+BEGIN_SRC emacs-lisp
-(use-package company
-  :ensure t
-  :config
-   (add-hook 'after-init-hook 'global-company-mode)
-)
-(use-package company-quickhelp
-  :ensure t
-)
-#+END_SRC
-
-** Discover my major
-** smex, smartparen, and discover-my-major
-
-#+BEGIN_SRC emacs-lisp
-(use-package smex
-  :ensure t
-  :bind ("M-x" . smex)
-)
-#+END_SRC
-
-Configure smartparens.  Note the orgmode configuration was taken from
-[[https://github.com/Fuco1/.emacs.d/blob/master/files/smartparens.el][here]], and takes care of matching things like '~'.
-#+BEGIN_SRC emacs-lisp
-  (use-package smartparens
-    :ensure t
-    :diminish smartparens-mode
-    :config
-    (progn
-       (require 'smartparens-config)
-       (smartparens-global-mode 1)
-       ;;; org-mode
-       (sp-with-modes 'org-mode
-       (sp-local-pair "*" "*" :actions '(insert wrap) :unless '(sp-point-after-word-p sp-point-at-bol-p) :wrap "C-*" :skip-match 'sp--org-skip-asterisk)
-       (sp-local-pair "_" "_" :unless '(sp-point-after-word-p) :wrap "C-_")
-       (sp-local-pair "/" "/" :unless '(sp-point-after-word-p))
-       (sp-local-pair "~" "~" :unless '(sp-point-after-word-p))
-       (sp-local-pair "=" "=" :unless '(sp-point-after-word-p))
-       (sp-local-pair "«" "»"))
-
-       (defun sp--org-skip-asterisk (ms mb me)
-       (or (and (= (line-beginning-position) mb)
-       (eq 32 (char-after (1+ mb))))
-       (and (= (1+ (line-beginning-position)) me)
-       (eq 32 (char-after me)))))
-
-    )
-  )
-#+END_SRC
-
-In any mode =C-h C-m= will show a list of key bindings.
-#+BEGIN_SRC emacs-lisp
-(use-package discover-my-major
-  :ensure t
-)
-(global-set-key (kbd "C-h C-m") 'discover-my-major)
-#+END_SRC
-
-** define-word
-Define word at point will define a word...at the current point.
-
-#+BEGIN_SRC emacs-lisp
-(use-package define-word
-  :ensure t
-  :config
-  (progn
-    (global-set-key (kbd "C-c d") 'define-word-at-point)
-    (global-set-key (kbd "C-c D") 'define-word)
-  )
-)
-#+END_SRC
-
-* Visuals
-** TODO Set up line numbers on left hand side not working
-#+BEGIN_SRC emacs-lisp
-(setq global-linum-mode t)
-#+END_SRC
-
-
-** Color theme
-Sometimes I just use reverse mode. Right now I'm trying out Sacha
-Chua's color theme.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(use-package color-theme)
-(use-package color-theme-solarized :ensure t)
-(defun my/setup-color-theme ()
-  (interactive)
-  (color-theme-solarized-dark)
-  (set-face-foreground 'secondary-selection "darkblue")
-  (set-face-background 'secondary-selection "lightblue")
-  (set-face-background 'font-lock-doc-face "black")
-  (set-face-foreground 'font-lock-doc-face "wheat")
-  (set-face-background 'font-lock-string-face "black")
-  (set-face-foreground 'org-todo "green")
-  (set-face-background 'org-todo "black"))
-
-(eval-after-load 'color-theme
-  '(when window-system
-    (my/setup-color-theme)
-(setq global-linum-mode t)
-))
-
-(when window-system
-  (custom-set-faces
-   '(erc-input-face ((t (:foreground "antique white"))))
-   '(helm-selection ((t (:background "ForestGreen" :foreground "black"))))
-   '(org-agenda-clocking ((t (:inherit secondary-selection :foreground "black"))) t)
-   '(org-agenda-done ((t (:foreground "dim gray" :strike-through nil))))
-   '(org-done ((t (:foreground "PaleGreen" :weight normal :strike-through t))))
-   '(org-clock-overlay ((t (:background "SkyBlue4" :foreground "black"))))
-   '(org-headline-done ((((class color) (min-colors 16) (background dark)) (:foreground "LightSalmon" :strike-through t))))
-   '(outline-1 ((t (:inherit font-lock-function-name-face :foreground "cornflower blue"))))))
-#+END_SRC
-
-This is managars theme
+** Color Theme
 #+BEGIN_SRC emacs-lisp
 (deftheme default-black
   "Automatically created 2013-05-20.")
@@ -421,515 +179,222 @@ This is managars theme
 
 #+END_SRC
 
-** Set up fill column
-I expected this section to be bigger, but I don't really use themes
-much anymore. I use either the default theme, or run emacs in reverse
-mode (recommended by ivg!).
+** Initial Preferences
+*** bind =dbrumley.org= =d= register
+I bind a register key to =dbrumley.org= because I find myself editing
+it often.  I put this at the top because I want it available even if
+something else doesn't load.
 
-I do set up a fill-column-indicator to set up a visual bar on the
-right of my screen showing the 80 column maximum. I like to remind
-(annoy?) my graduate students that 80 columns is the maximum. They, of
-course, don't like this an insist screens are bigger than this, and
-proceed to show me on their screen how big it is.
+Reminder: to access this press =C-x r j= and press =d= at the
+prompt. I initially found this hard to remember until I figured out:
+  * =C-x= means execute in emacs
+  * =r= is register
+  * =j= is jump
+So overall I think of this as "execute the command register jump",
+which is very logical if you think about it.
 
-I insist on 80 columns for a few reasons:
-  1. 80 columns is really the maximum size you can print with a nice
-     monospace font.
-  2. I find it easier since I like split screens, and with 80 columns
-     I can put two windows side-by-side.
-  3. It's standard in every editor. Why make the whole world
-     reconfigure to their personal preference?
-
-This will set it up as a global minor mode.
 #+BEGIN_SRC emacs-lisp
-(use-package fill-column-indicator
-  :ensure t
-  :config
-  (progn
-     (define-globalized-minor-mode
-         global-fci-mode fci-mode (lambda () (fci-mode 1)))
-     (global-fci-mode t)
-  )
+  (set-register ?d (cons 'file "~/.emacs.d/dbrumley.org"))
+  (set-register ?t (cons 'file "~/Dropbox/org-mode/todo.org"))
+#+END_SRC
+
+*** Turn off splash screen
+#+BEGIN_SRC emacs-lisp
+(setq inhibit-splash-screen t)
+#+END_SRC
+
+*** Highlight matching parentheses
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode 1)
+#+END_SRC
+
+*** Turn off tabs
+#+BEGIN_SRC emacs-lisp
+  (set-default 'indent-tabs-mode nil)
+#+END_SRC
+
+*** Indicate empty lines
+#+BEGIN_SRC emacs-lisp
+  (set-default 'indicate-empty-lines t)
+#+END_SRC
+
+*** Turn on auto-fill for text mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'text-mode-hook 'turn-on-auto-fill)
+#+END_SRC
+
+*** Turn off backup files
+#+BEGIN_SRC emacs-lisp
+  (set-default 'make-backup-files nil)
+#+END_SRC
+
+*** Change "yes or no" to "y or n"
+#+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+*** Turn off toolbar
+#+BEGIN_SRC emacs-lisp
+(tool-bar-mode -1)
+#+END_SRC
+*** Put time in status bar
+#+BEGIN_SRC emacs-lisp
+  (setq display-time-day-and-date t display-time-24hr-format t)
+               (display-time)
+#+END_SRC
+*** Delete trailing white space
+
+To remove trailing white space, Emacs v21 and greater has =M-x
+delete-training-whitespace=. This runs the command as part of the
+=before-save-hook=.
+#+BEGIN_SRC emacs-lisp
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+END_SRC
+
+Optionally, this could be done only in particular modes, e.g.,
+#+BEGIN_EXAMPLE emacs-lisp
+(add-hook 'c-mode-hook
+(lambda () (add-to-list 'write-file-functions
+                        'delete-trailing-whitespace)))
+#+END_EXAMPLE
+
+** Packages
+*** Counsel
+Counsel allows us to utilize ivy by replacing many built-in and common functions
+with richer versions. Let's install it!
+
+#+BEGIN_SRC emacs-lisp
+(use-package counsel-projectile)
+(use-package counsel
+  :demand t)
+#+END_SRC
+
+*** Swiper
+Swiper is an awesome searching utility with a quick preview. Let's install it and
+load it when =swiper= or =swiper-all= is called.
+
+#+BEGIN_SRC emacs-lisp
+(use-package swiper
+  :commands (swiper swiper-all))
+#+END_SRC
+
+*** Magit
+The magical git client. Let's load magit only when one of the several entry pont
+functions we invoke regularly outside of magit is called.
+
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+ :ensure t
+  :commands (magit-status magit-blame magit-log-buffer-file magit-log-all)
+  :bind (("C-x v d" . magit-status))
 )
 #+END_SRC
 
-
-I also currently use powerline, though I'm not sure really how useful
-it is.
-#+BEGIN_SRC emacs-lisp
-(use-package powerline
-  :ensure t
-)
-#+END_SRC
-
-* Helm
+*** Projectile
+Projectile is a quick and easy project management package that "just works". We're
+going to install it and make sure it's loaded immediately.
 
 #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :ensure t
-  :init
-  (progn
-  (require 'helm-config)
-  (helm-mode 1))
-)
+(use-package projectile
+  :demand t)
 #+END_SRC
 
-* mu4e
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/")
-(require 'mu4e)
-(setq mu4e-mu-binary "/usr/local/bin/mu")
-(setq mu4e-maildir "/Users/dbrumley/Mail/Gmail-mbsync")
-(setq mu4e-view-show-images t)
-(setq mu4e-view-prefer-html t)
-;(setq mu4e-html2text-command "w3m -dump -T text/html")
-;(setq mu4e-html2text-command 'mu4e-shr2text)
-; See if this speeds things up.
-(setq mu4e-use-fancy-chars t)
-(setq mu4e-headers-skip-duplicates t)
-(setq mu4e-get-mail-command "mbsync gmail")
-;(setq mu4e-get-mail-command "offlineimap")
-(setq mu4e-update-interval 300)
-(setq mu4e-attachment-dir  "~/Downloads")
-(add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
-(setq mu4e-compose-signature-auto-include t)
-(setq message-signature-file "~/.emacs.d/signature.txt")
-(setq smtpmail-queue-mail nil ;; start in normal mode
-  smtpmail-queue-dir "~/Mail/queue/cur"
-)
-#+END_SRC
-
-And sending mail
-#+BEGIN_SRC emacs-lisp :tangle no
-(require 'smtpmail)
-(require 'starttls)
-(setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-stream-type 'starttls
-      smtpmail-smtp-service 587
-      smtpmail-default-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-user "dbrumley@gmail.com")
-(setq starttls-extra-arguments '("--x509cafile"
-"/usr/local/etc/ssl/certs/ca-certificates.crt"))
-#+END_SRC
-
-And gmail shortcuts:
-#+BEGIN_SRC emacs-lisp :tangle no
-(setq mu4e-drafts-folder "/[Gmail].Drafts")
-(setq mu4e-sent-folder   "/[Gmail].Sent Mail")
-(setq mu4e-trash-folder  "/[Gmail].Trash")
-(setq mu4e-maildir-shortcuts
-    '( ("/INBOX"               . ?i)
-       ("/[Gmail].Sent Mail"   . ?s)
-       ("/[Gmail].Trash"       . ?t)
-       ("/[Gmail].All Mail"    . ?a)))
-#+END_SRC
-
-And a couple of small customizations:
-#+BEGIN_SRC emacs-lisp :tangle no
-(add-to-list 'mu4e-view-actions
-  '("ViewInBrowser" . mu4e-action-view-in-browser) t)
-
-(add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
-
-(add-hook 'mu4e-view-mode-hook 'visual-line-mode)
-#+END_SRC
-
-* Org mode
-** Default options
-And fontify the buffers and set the default org directory:
-#+BEGIN_SRC emacs-lisp
-(setq org-src-fontify-natively t)
-#+END_SRC
-
-And set up a register key to go to my journal (j)
-#+BEGIN_SRC emacs-lisp
-  (set-register ?j (cons 'file "~/Dropbox/org-mode/journal.org"))
-#+END_SRC
-
-
-This allows us to have alphabetical lists list 'a.', 'A.', etc.
-#+BEGIN_SRC emacs-lisp
-(setq org-list-allow-alphabetical 1)
-#+END_SRC
-
-Set up images so they are displayed inline:
-#+BEGIN_SRC emacs-lisp
-(setq org-startup-with-inline-images t)
-#+END_SRC
-
-** Org Journal and Capture
-Set up our default directory and default org capture.
+*** Org
+Let's include a newer version of org-mode than the one that is built in. We're going
+to manually remove the org directories from the load path, to ensure the version we
+want is prioritized instead.
 
 #+BEGIN_SRC emacs-lisp
-(setq org-directory "~/Dropbox/org-mode")
-#+END_SRC
+(use-package org
+  :ensure org-plus-contrib
+  :pin org
+  :defer t)
 
+;; Ensure ELPA org is prioritized above built-in org.
+(require 'cl)
+(setq load-path (remove-if (lambda (x) (string-match-p "org$" x)) load-path))
 
-
-#+END_SRC
-
-Make sure org knows about all the languages we use
-#+BEGIN_SRC emacs-lisp
+;; Make sure org knows about the languages we use
 (org-babel-do-load-languages
  'org-babel-load-languages
    '((python . t)
      (emacs-lisp . t)
      (ocaml . t)
      (python . t)
-     (sh . t)
+     (shell . t)
      (C . t)
     )
 )
+
+;; Fontify within SRC blocks natively
+(setq org-src-fontify-natively t)
 #+END_SRC
 
-Set up default notes directory for random things.
-#+BEGIN_SRC emacs-lisp
-(setq org-default-notes-file (concat org-directory "/notes.org"))
-(define-key global-map "\C-cc" 'org-capture)
-#+END_SRC
-
-
-This template captures to a journal, e.g., for logging time.
-This was taken from
-[[http://sachachua.com/blog/2014/11/using-org-mode-keep-process-journal/]]
-
-These are our templates for capturing things quickly. To invoke
-org-capture, type =C-c c=
+*** Toc-org
+Let's install and load the =toc-org= package after org mode is
+loaded. This is the package that automatically generates an up to date
+table of contents for us.
 
 #+BEGIN_SRC emacs-lisp
-(setq org-capture-templates
-      '(("j" "Log entry" entry
-         (file+datetree+prompt "~/Dropbox/org-mode/journal.org")
-         "* %?\n Entered on %U\n %i\n %a"
-        )
-        ("w" "Weekly goal entry" entry
-         (file+headline "~/Dropbox/org-mode/journal.org" "Weekly Goals")
-         "* Weekly goal for [%<%Y-%m-%d>]"
-        ;; other entries
-        )
-       )
-)
-
+(use-package toc-org
+  :after org
+  :init (add-hook 'org-mode-hook #'toc-org-enable))
 #+END_SRC
 
-Let's look at the first one for journal:
-  - first we say this is a journal entry, and it's bound to =C-c c j=.
-  - The =file+datetree+prompt= keyword means that the entires will be
-    stored in =~/Dropbox/org-mode/journal.org=
-  - =%K= means link to the currently clocked task.
-  - =%a= means annotation.
-  - =%i= means initial content, the region when capture is called
-    while the region is active. The entire text will be indented like
-    =%i= itself.
-  - =%?= after completing the template, position cursor here.
-
-** Org agenda and TODO
-
-Tell orgmode which files to look for agenda's in.
-#+BEGIN_SRC emacs-lisp
-(setq org-agenda-files
-      (delq nil
-            (mapcar (lambda (x) (and (file-exists-p x) x))
-                    '("~/Dropbox/org-mode/journal.org"
-                      "~/Dropbox/org-mode/todo.org"
-))))
-#+END_SRC
-
-Set up orgmode to log the time when something is completed
-#+BEGIN_SRC emacs-lisp
-(setq org-log-done t)
-#+END_SRC
-
-Set up some global key maps
-#+BEGIN_SRC emacs-lisp
-(define-key global-map "\C-cl" 'org-store-link)
-(define-key global-map "\C-ca" 'org-agenda)
-#+END_SRC
-
-A gtd-sih workflow:
-#+BEGIN_SRC emacs-lisp
-(setq org-todo-keywords
- '((sequence
-    "TODO(t)"  ; next action
-    "STARTED(s)"
-    "WAITING(w@/!)"
-    "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
-#+END_SRC
-
-Clock in when a task is started. Note [[http://sachachua.com/blog/2007/12/clocking-time-with-emacs-org/][Sacha Chua]] blog entry for this
-does not work (undefined variable ~state~), but then I looked through
-her emacs configuration and found this.
-#+BEGIN_SRC emacs-lisp
-(setq org-clock-in-switch-to-state "STARTED")
-#+END_SRC
-
-Show columns initially
-#+BEGIN_SRC emacs-lisp
-(setq org-agenda-view-columns-initially t)
-#+END_SRC
-
-Make sure effort estimates are in the agenda column view columns:
-#+BEGIN_SRC emacs-lisp
-(setq org-columns-default-format
-     "%50ITEM %TODO %3PRIORITY %Effort{:} %TAGS")
-#+END_SRC
-
-And sort by the effort:
-#+BEGIN_SRC emacs-lisp
-(setq org-agenda-sorting-strategy '(todo-state-up priority-down effort-up tag-up))
-#+END_SRC
-
-When clocking in, make sure there is an effort estimate (taken from
-[[http://orgmode.org/worg/org-hacks.html][Org Hacks]])
-#+BEGIN_SRC emacs-lisp
-(add-hook 'org-clock-in-prepare-hook
-          'my-org-mode-ask-effort)
-
-(defun my-org-mode-ask-effort ()
-  "Ask for an effort estimate when clocking in."
-  (unless (org-entry-get (point) "Effort")
-    (let ((effort
-           (completing-read
-            "Effort: "
-            (org-entry-get-multivalued-property (point) "Effort"))))
-      (unless (equal effort "")
-        (org-set-property "Effort" effort)))))
-#+END_SRC
-
-** Broken Org with cool extras
-I use org-mode checked out from git. I don't use melpa because I want
-to play around with org-contrib, and I could never get
-org-plus-contrib to work and load properly.  Since we have to load
-org-mode first, I don't use =use-package= to configure.
-
-The following loads org, and sets up the modules I plan to play around
-with. Note I've only gotten this to work with a fresh checkout of
-orgmode as:
-#+BEGIN_SRC shell :tangle no
-$ git clone git://orgmode.org/org-mode.git
-$ <edit org-mode/local.mk>
-$ make autoloads
-#+END_SRC
-
-The edit to =org-mode/local.mk= is to make sure the correct emacs is
-chosen (by default it uses the default OSX one instead of the one I
-installed).
-
-
-# Then I've added to my =init.el= the following to make sure the new
-# orgmode is used instead of the built-in:
-# #+BEGIN_SRC emacs-lisp :tangle no
-# (add-to-list 'load-path "~/path/to/orgdir/lisp")
-# (add-to-list 'load-path "~/path/to/orgdir/contrib/lisp" t)
-# #+END_SRC
-
-# Finally, we start real configure. First, I load in some contrib's I'm
-# playing with.
+*** YAML and Markdown
+I use two markdown modules current: markdown-mode for editing, and the
+github markdown API for rendering via gh-md
 
 #+BEGIN_SRC emacs-lisp
-;(setq org-modules
-;              '(org-bbdb
-;                org-bibtex
-;                org-bullets
-;                org-docview
-;                org-gnus
-;                org-info
-;                org-irc
-;                org-mhe
-;                org-rmail
-;                org-w3m
-;                org-drill))
-;(eval-after-load 'org
-; '(org-load-modules-maybe t))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-;(require 'org-bullets)
-#+END_SRC
-
-* Projectile
-
-[[http://batsov.com/projectile/][Projectile]] is a project interaction library for Emacs. This
-configuration option installs it and enables it globally.
-
-#+BEGIN_SRC emacs-lisp
-(use-package projectile
+(use-package markdown-mode
   :ensure t
-  :config (projectile-global-mode)
+)
+(use-package gh-md
+  :ensure t
 )
 #+END_SRC
 
-Here are a couple of useful keystrokes.
-#+BEGIN_EXAMPLE emacs-lisp
-C-c p p ;; switch projects
-C-c p f ;; list project files
-C-c p g ;; grep project
-#+END_EXAMPLE
+*** Company mode
+I use [[http://company-mode.github.io/][company mode]] for auto-completion.  Funny story: I thought
+company mode was some sort of corporate mode. It actually stands for
+"complete anything".  Note this is use by elpy for python, but I have
+it here since it works with most languages.  I also enable it globally
+via the config hook.
 
-* Python
-
-In Python, I use =elpy=, and so far am quite happy with it. I use it
-with company-mode (completion-mode), =jedi= , and =ipython= for my
-REPL.  I have everything set up for =python3=.
-
-Note that the emacs utilities must work in concert with installed with
-the installed python version, e.g., which =rope= (for autocompletion)
-you install depends on whether you are running python 2 or 3.
-
-** OSX dependencies
-
-Below I detail how I set things up using macports on my OSX macbook
-pro (running El Capitan if that matters).  First install `python3` and
-`pip3`.
-
-#+BEGIN_SRC shell :tangle no
-$ port search python3
-#+END_SRC
-
-In the following, I assume `python35` is the latest; substitute
-whatever latest version you see from the above command.
-
-You need to install `python35` and `py35-pip`:
-
-#+BEGIN_SRC shell :tangle no
-$ port install python35 py35-pip
-#+END_SRC
-
-In accordance with PEP standards, we refer to particular versions of
-Python 3 as `python3`.  You need to configure your particular
-installed version to be known as `python3`, which can be done as
-follows:
-
-#+BEGIN_SRC shell :tangle no
-$ sudo port select python3 python35
-#+END_SRC
-
-Unfortunately, while it is common in Linux to refer to =pip= as the
-python 2 version for, and =pip3= as the Python 3 version of pip,
-macports doesn't quite adhere to this convention. I select to link
-=pip= as the python 3 version:
-
-#+BEGIN_SRC shell :tangle no
-$ sudo port select pip pip35
-#+END_SRC
-
-
-Note: You can always run =port select python3= and =port select pip=
-to see which versions of =pip= and =python= are available.
-
-I also use =ipython= as my REPL.  To install =ipython= for =python3=,
-run:
-#+BEGIN_SRC shell :tangle no
-sudo port install py35-ipython
-#+END_SRC
-
-Similar to =python3= and =pip=, you should use =port select= to
-select the proper symbolic link for =ipython=:
-#+BEGIN_SRC shell :tangle no
-$ port select ipython
-#+END_SRC
-
-When everything is installed correctly you should be able to run =pip=
-and =python3= and verify it's pointing to some variant of version 3.
-
-#+BEGIN_SRC shell :tangle no
-$ pip --version
-pip 8.1.1 from /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages (python 3.5)
-$ python3 --version
-Python 3.5.1
-$ ipython --version
-3.1.0
-#+END_SRC
-
-
-** Emacs configuration
-I install =elpy= via MELPA (set up above).
-
-Before using =elpy=, install the =pip= dependencies for
-  * =flake8= to check python code (a linter)
-  * =rope=, a python refactoring library (the appropriate version for
-    your python install)
-  * =jedi=, a python autocompletion library
-  * =yapf= to beautiful python files and buffers
-  * =autopep8= to make sure code is PEP8 compliant
-  * =importmagic= to automatically add, remove, and manage imports
-
-On my system, I do:
-#+BEGIN_SRC shell :tangle no
-pip install rope_py3k
-pip install flake8
-pip install importmagic
-pip install autopep8
-pip install yapf
-pip install jedi
-#+END_SRC
-
-Now, install and configure elpy. We set:
- * =ipython= as the python evaluation engine
- * Use company mode (completion mode) for quick help
-
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :ensure t
+  :config
+   (add-hook 'after-init-hook 'global-company-mode)
+)
 (use-package company-quickhelp
   :ensure t
 )
+#+END_SRC
 
-(use-package company-jedi
+*** Discover My Major Mode
+In any mode =C-h C-m= will show a list of key bindings.
+#+BEGIN_SRC emacs-lisp
+(use-package discover-my-major
   :ensure t
 )
+(global-set-key (kbd "C-h C-m") 'discover-my-major)
+#+END_SRC
 
-(use-package elpy
+*** Define Word at Point
+Define word at point will define a word...at the current point.
+
+#+BEGIN_SRC emacs-lisp
+(use-package define-word
   :ensure t
   :config
   (progn
-    (elpy-enable)
-    (company-quickhelp-mode)
-    (elpy-use-ipython)
+    (global-set-key (kbd "C-c d") 'define-word-at-point)
+    (global-set-key (kbd "C-c D") 'define-word)
   )
 )
-(setq python-shell-interpreter "ipython"
-    python-shell-interpreter-args "--simple-prompt -i")
 #+END_SRC
 
-Install the =pydoc= package for documentation
-#+BEGIN_SRC emacs-lisp
-(use-package pydoc
- :ensure t
-)
-#+END_SRC
-
-*Non-pep compliant code:* Note that often I will want to edit a file
-that doesn't conform to pep8.  To disable flycheck (which calls pep8
-and flake8) you should uncomment the following lines.  I wish the code
-I looked at was better and I didn't have to disable :)
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (setq elpy-modules
-     (quote
-      (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
-#+END_SRC
-
-This installs PEP8 tools:
-#+BEGIN_SRC emacs-lisp
-(use-package py-autopep8
-  :ensure t
-  :config (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-)
-#+END_SRC
-
-=iedit= mode allows you to edit all variable instances in a buffer at
-once. Useful for renaming.  This trick comes from
-https://www.youtube.com/watch?v=mflvdXKyA_g&index=7&list=PLq326Pjb1tngGuj02SGmob7phCkSggOKJ
-
-The default keymap is =M-;=
-#+BEGIN_SRC emacs-lisp
-(use-package iedit
-:ensure t
-)
-#+END_SRC
-
-* OCaml
+*** OCaml
 Everything OCaml related is done out of opam, not the default emacs
 package sites. This was taken from the opam =user-setup= package and
 Ivan's configuration.
@@ -975,9 +440,9 @@ Second, load up merlin.  We set some preferences:
 Note that on some systems =tuareg-font-lock-symbols= causes huge
 performance issues; if this happens just comment it out.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package ocp-indent)
-  (use-package merlin
+(use-package merlin
     :load-path (lambda () (list (opam-share-path "emacs/site-lisp")))
     :config
       (progn
@@ -1012,62 +477,8 @@ We also need to configure =utop=:
 (autoload 'utop "utop" "Toplevel for OCaml" t)
 #+END_SRC
 
-** Set up ott
-I install ott from =opam=, so I don't include it in the package
-manager.  Note that ott's emacs config needs a specialized path (which
-seems normal for opam for some reason).
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(use-package ottmode
-  :load-path (lambda () (list (opam-share-path "/ott/emacs")))
-)
-#+END_SRC
-
-** =bap.mli= register key is =b=
-I like to be able to quickly reference =bap.mli= from anywhere. I bind
-looking at this file currently to the =b= register.  Reminder: to
-access this press =C-x r j= and press =b= at the prompt.
-
-#+BEGIN_SRC emacs-lisp
-(set-register ?b (cons 'file
-                         (opam-lib-path "/bap/bap.mli")))
-#+END_SRC
-
-* OSX
-#+BEGIN_SRC emacs-lisp
-(use-package osx-browse
- :ensure t
- :config
- (setq browse-default-macosx-browser 'osx-browse-url)
-)
-#+END_SRC
-* YAML and Markdown
-** Markdown
-I use two markdown modules current: markdown-mode for editing, and the
-github markdown API for rendering via gh-md
-
-#+BEGIN_SRC emacs-lisp
-(use-package markdown-mode
-  :ensure t
-)
-(use-package gh-md
-  :ensure t
-)
-#+END_SRC
-
-** YAML and RAML
-RAML is a markup language based on YAML. There is currently no RAML
-mode, but YAML is close enough.
-
-#+BEGIN_SRC emacs-lisp
-(use-package yaml-mode
-  :ensure t
-  :config
-    (add-to-list 'auto-mode-alist '("\\.raml\\'" . yaml-mode))
-)
-#+END_SRC
-* Latex/Docview setup
-** Install packages
+*** Latex/Docview setup
+**** Install packages
 
    One thing that took me awhile to figure out is that the package auctex
 is not called auctex.  [[http://superuser.com/questions/737835/cannot-run-auctex-on-emacs][One post]] suggests to require =tex=, while the
@@ -1086,7 +497,7 @@ seems to work.
   )
 #+END_SRC
 
-** Setup auctex basics
+**** Setup auctex basics
 #+BEGIN_SRC emacs-lisp
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;; LATEXMK and AUCTEX ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1173,7 +584,7 @@ seems to work.
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #+END_SRC
 
-** Turn on reftex and set default bibliography
+**** Turn on reftex and set default bibliography
 
 #+BEGIN_SRC emacs-lisp
 (add-hook 'latex-mode-hook 'turn-on-reftex)
@@ -1181,7 +592,7 @@ seems to work.
 (setq reftex-default-bibliography '("DBrumley.bib"))
 #+END_SRC
 
-** handy in-emacs pdf navigation
+**** handy in-emacs pdf navigation
 In docview mode, creates key bindings so that =M-[= and =M-]= move forward
 and backward while keeping your cursor within the buffer. useful for
 reviewing papers so you can write notes as you read.  Taken from
@@ -1194,26 +605,27 @@ reviewing papers so you can write notes as you read.  Taken from
 (global-set-key (kbd "M-]") 'doc-next)
 #+END_SRC
 
-* Langtool
-I found this handy tool for doing grammar checking referenced [[https://joelkuiper.eu/spellcheck_emacs][here]]
-called langtool.  It unfortunately requires Java be installed, but it
-does seem handy.
+*** Writegood
+We want to be able to check for "weasel" words et al. This is a handy
+package, and also referenced on [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might]]'s blog. I enable this mode
+by default for latex and for text files.
 
-Executing =langtool-check-buffer= will check the buffer and highlight
-grammatical errors.  =langtool-correct-buffer= will bring up an
-explanation and suggestion for correcting.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(use-package langtool
+#+BEGIN_SRC emacs-lisp
+(use-package writegood-mode
   :ensure t
   :config
   (progn
-  (setq langtool-language-tool-jar "/usr/local/LanguageTool-2.9/languagetool-commandline.jar")
+     (defun writegood-minor-mode-on ()
+        "Turn on `writegood-mode` mode."
+        (interactive)
+        (writegood-mode 1))
+     (add-hook 'text-mode-hook 'writegood-minor-mode-on)
+     (add-hook 'latex-mode-hook 'writegood-minor-mode-on)
   )
 )
 #+END_SRC
 
-* Web
+*** Web
 I get most of my web configuration, especially for react, from
 [[http://codewinds.com/blog/2015-04-02-emacs-flycheck-eslint-jsx.html]]
 
@@ -1261,35 +673,246 @@ I get most of my web configuration, especially for react, from
 ;  (exec-path-from-shell-initialize))
 #+END_SRC
 
-* Writegood
-We want to be able to check for "weasel" words et al. This is a handy
-package, and also referenced on [[http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/][Matt Might]]'s blog. I enable this mode
-by default for latex and for text files.
 
-#+BEGIN_SRC emacs-lisp
-(use-package writegood-mode
+*** Python
+In Python, I use =elpy=, and so far am quite happy with it. I use it
+with company-mode (completion-mode), =jedi= , and =ipython= for my
+REPL.  I have everything set up for =python3=.
+
+Note that the emacs utilities must work in concert with installed with
+the installed python version, e.g., which =rope= (for autocompletion)
+you install depends on whether you are running python 2 or 3.
+
+**** OSX dependencies
+
+Below I detail how I set things up using macports on my OSX macbook
+pro (running El Capitan if that matters).  First install `python3` and
+`pip3`.
+
+#+BEGIN_SRC shell :tangle no
+$ port search python3
+#+END_SRC
+
+In the following, I assume `python35` is the latest; substitute
+whatever latest version you see from the above command.
+
+You need to install `python35` and `py35-pip`:
+
+#+BEGIN_SRC shell :tangle no
+$ port install python35 py35-pip
+#+END_SRC
+
+In accordance with PEP standards, we refer to particular versions of
+Python 3 as `python3`.  You need to configure your particular
+installed version to be known as `python3`, which can be done as
+follows:
+
+#+BEGIN_SRC shell :tangle no
+$ sudo port select python3 python35
+#+END_SRC
+
+Unfortunately, while it is common in Linux to refer to =pip= as the
+python 2 version for, and =pip3= as the Python 3 version of pip,
+macports doesn't quite adhere to this convention. I select to link
+=pip= as the python 3 version:
+
+#+BEGIN_SRC shell :tangle no
+$ sudo port select pip pip35
+#+END_SRC
+
+
+Note: You can always run =port select python3= and =port select pip=
+to see which versions of =pip= and =python= are available.
+
+I also use =ipython= as my REPL.  To install =ipython= for =python3=,
+run:
+#+BEGIN_SRC shell :tangle no
+sudo port install py35-ipython
+#+END_SRC
+
+Similar to =python3= and =pip=, you should use =port select= to
+select the proper symbolic link for =ipython=:
+#+BEGIN_SRC shell :tangle no
+$ port select ipython
+#+END_SRC
+
+When everything is installed correctly you should be able to run =pip=
+and =python3= and verify it's pointing to some variant of version 3.
+
+#+BEGIN_SRC shell :tangle no
+$ pip --version
+pip 8.1.1 from /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages (python 3.5)
+$ python3 --version
+Python 3.5.1
+$ ipython --version
+3.1.0
+#+END_SRC
+
+
+**** Emacs configuration
+I install =elpy= via MELPA (set up above).
+
+Before using =elpy=, install the =pip= dependencies for
+  * =flake8= to check python code (a linter)
+  * =rope=, a python refactoring library (the appropriate version for
+    your python install)
+  * =jedi=, a python autocompletion library
+  * =yapf= to beautiful python files and buffers
+  * =autopep8= to make sure code is PEP8 compliant
+  * =importmagic= to automatically add, remove, and manage imports
+
+On my system, I do:
+#+BEGIN_SRC shell :tangle no
+pip install rope_py3k
+pip install flake8
+pip install importmagic
+pip install autopep8
+pip install yapf
+pip install jedi
+#+END_SRC
+
+Now, install and configure elpy. We set:
+ * =ipython= as the python evaluation engine
+ * Use company mode (completion mode) for quick help
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(use-package company-quickhelp
+  :ensure t
+)
+
+(use-package company-jedi
+  :ensure t
+)
+
+(use-package elpy
   :ensure t
   :config
   (progn
-     (defun writegood-minor-mode-on ()
-        "Turn on `writegood-mode` mode."
-        (interactive)
-        (writegood-mode 1))
-     (add-hook 'text-mode-hook 'writegood-minor-mode-on)
-     (add-hook 'latex-mode-hook 'writegood-minor-mode-on)
+    (elpy-enable)
+    (company-quickhelp-mode)
+    (elpy-use-ipython)
   )
+)
+(setq python-shell-interpreter "ipython"
+    python-shell-interpreter-args "--simple-prompt -i")
+#+END_SRC
+
+Install the =pydoc= package for documentation
+#+BEGIN_SRC emacs-lisp
+(use-package pydoc
+ :ensure t
 )
 #+END_SRC
 
-* Shortcuts and Registers
+*Non-pep compliant code:* Note that often I will want to edit a file
+that doesn't conform to pep8.  To disable flycheck (which calls pep8
+and flake8) you should uncomment the following lines.  I wish the code
+I looked at was better and I didn't have to disable :)
 
+#+BEGIN_SRC emacs-lisp :tangle no
+  (setq elpy-modules
+     (quote
+      (elpy-module-company elpy-module-eldoc elpy-module-pyvenv elpy-module-highlight-indentation elpy-module-yasnippet elpy-module-sane-defaults)))
+#+END_SRC
 
-** Registers
-I use registers to open up specific files (I'm saving shortcuts for
-keyboard macros).  While surely an old idea, I'm trying to template
-after [[http://sachachua.com/blog/2015/02/learn-take-notes-efficiently-org-mode/][Sacha Chua]]'s emacs here.
+This installs PEP8 tools:
+#+BEGIN_SRC emacs-lisp
+(use-package py-autopep8
+  :ensure t
+  :config (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+)
+#+END_SRC
 
-** Bind goto-line
+=iedit= mode allows you to edit all variable instances in a buffer at
+once. Useful for renaming.  This trick comes from
+https://www.youtube.com/watch?v=mflvdXKyA_g&index=7&list=PLq326Pjb1tngGuj02SGmob7phCkSggOKJ
+
+The default keymap is =M-;=
+#+BEGIN_SRC emacs-lisp
+(use-package iedit
+:ensure t
+)
+#+END_SRC
+
+** OS configuration
+This section should only include OS-specific things.
+*** OS X behaviors
+According to the [[https://github.com/eschulte/emacs24-starter-kit/blob/master/starter-kit.org][starter kit]], there is a bug on OS X where system-name
+is FQDN.
+
+#+BEGIN_SRC emacs-lisp
+(if (or
+    (eq system-type 'darwin)
+    (eq system-type 'berkeley-unix))
+    (setq system-name (car (split-string system-name "\\."))))
+#+END_SRC
+
+*** OSX Copy and Paste
+#+BEGIN_SRC emacs-lisp
+(setq x-select-enable-clipboard t)
+#+END_SRC
+
+*** Set up the right profile information and shell
+
+The shell command setup for OSX is a bit of a mess when you run =M-x
+compile=.
+  - =opam= wants to have a bunch of environment variables set, which
+    are typically defined by =eval `opam config env`=.
+  - =elpy= and =python= use virtual environments, and need to make
+    sure that they can *prepend* to the path variable the virtualenv
+    directory.
+
+If you read the [[https://github.com/ocaml/opam/wiki/Setup-Emacs.app-on-macosx-for-opam-usage][opam faq on OSX]], it will say to do this:
+
+#+BEGIN_SRC emacs-lisp :tangle no
+(cond
+ ((eq window-system 'ns) ; macosx
+  ;; Invoke login shells, so that .profile or .bash_profile is read
+  (setq shell-command-switch "-lc")))
+(setq explicit-bash-args '("--login" "-i"))
+#+END_SRC
+
+This will make sure you bash is run as a login shell, reading through
+=.bash_profile=.  This will fix opam, but break elpy virtualenvs.
+
+*** Use the system defined web browser
+
+#+BEGIN_SRC emacs-lisp
+(setq browse-url-browser-function 'browse-url-default-macosx-browser)
+(use-package osx-browse
+ :ensure t
+ :config
+ (setq browse-default-macosx-browser 'osx-browse-url)
+)
+#+END_SRC
+
+*** Set up UTF-8
+The OS X Terminal.app uses UTF-8 by default.  Taken from [[http://www.emacswiki.org/emacs/EmacsForMacOS][Emacs Wiki]]
+
+#+BEGIN_SRC emacs-lisp
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+#+END_SRC
+
+*** Visible Bell Bug Workaround
+Work around [[https://www.reddit.com/r/emacs/comments/3omsr2/weird_display_issue_in_os_x/][OSX bug in El Capitan]] regarding blurred square that kind
+of looks like a magnifying glass. It tursn
+#+BEGIN_SRC emacs-lisp
+(setq visible-bell nil)
+
+#+END_SRC
+
+** Post Initialization
+Let's lower our GC thresholds back down to a sane level.
+
+#+BEGIN_SRC emacs-lisp
+(setq gc-cons-threshold 16777216
+      gc-cons-percentage 0.1)
+#+END_SRC
+
+** Shortcuts and Other Post Bindings
+*** Bind goto-line
 Even though line numbers are "evil", I like them. Usually goto-line is
 M-g M-g, but here I make it C-c C-g since that is usually not bound
 anyway by default and control is easier for me to go to than escape.
@@ -1301,85 +924,8 @@ anyway by default and control is easier for me to go to than escape.
 #+RESULTS:
 : goto-line
 
-** Set up =C-h C-m= for discover-my-major
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-h C-m") 'discover-my-major)
-#+END_SRC
-
-* Custom Macros
-Useful for inserting the current date:
-#+BEGIN_SRC emacs-lisp
- (defun insert-current-date () (interactive)
-    (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
-#+END_SRC
-
-Mark done and archive orgmode:
-#+BEGIN_SRC emacs-lisp
-(fset 'org-done-archive
-   [?\C-c ?\C-t ?x escape ?x ?o ?r ?g ?- ?a ?r ?c ?h ?i return])
-#+END_SRC
-
-* TESTING
-#+BEGIN_SRC emacs-lisp
-(use-package gitlab
-:ensure t
-:config
- (progn
-  (setq gitlab-host "https://geeklab.forallsecure.com")
-  (setq gitlab-username "dbrumley")
- )
-)
-(use-package vagrant-tramp
-:ensure t)
-#+END_SRC
-* Testing pdf-tools - NO RETINA
-
-#+BEGIN_SRC emacs-lisp
-
-  ;; (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-  ;; TeX-source-correlate-start-server t)
-  ;; (unless (assoc "PDF Tools" TeX-view-program-list-builtin)
-  ;;     (push '("PDF Tools" TeX-pdf-tools-sync-view) TeX-view-program-list))
-
-#+END_SRC
-* TODO Turn on flyspell mode for text
+*** Turn on flyspell mode
 #+BEGIN_SRC emacs-lisp
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
-#+END_SRC
-
-* TODO
-** TODO Organize packages alphabetically
-** TODO Try out helm
-** DONE Investigate load errors in dbrumley.org
-These two warnings:
-Could not load company-mode
-Could not load org-pandoc
-
-** TODO Investigate smartparens for ocaml editing
-See https://github.com/Fuco1/smartparens/wiki/Quick-tour
-
-* Some Reminders
-** Evaluate lisp statements
-In emacs, you can evaluate a LISP command with =C-x C-e=.
-** See the value of a variable
-You can use =M-x describe-variable= to see the value of a variable,
-e.g., =exec-path= is the equivalent of =PATH= in emacs.
-
-** Insert a code block in org mode
-Type =<s= followed by the TAB key. You can then do =C-c '= (that is a
-single quote) within the code block to bring up a separate
-window. After editing, type =C-c '= again to return to the main
-buffer.
-** Use discover-my-major
-Discover my major will show you key bindings in the current major
-mode. By default the key binding is =C-h C-m=.
-
-* Visible Bell Bug Workaround
-Work around [[https://www.reddit.com/r/emacs/comments/3omsr2/weird_display_issue_in_os_x/][OSX bug in El Capitan]] regarding blurred square that kind
-of looks like a magnifying glass. It tursn
-
-#+BEGIN_SRC emacs-lisp
-(setq visible-bell nil)
-
 #+END_SRC
