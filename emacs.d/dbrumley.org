@@ -9,9 +9,60 @@
 :END:
 
 ** Table of Contents :TOC_3_gh:
+- [[#configuration][Configuration]]
+  - [[#about-this-file][About this file]]
+  - [[#org-file-tweaks][Org File Tweaks]]
+    - [[#automatically-tangle][Automatically Tangle]]
+    - [[#visibility-settings][Visibility Settings]]
+    - [[#table-of-contents][Table of Contents]]
+  - [[#personal-information][Personal Information]]
+  - [[#emacs-initialization][Emacs Initialization]]
+    - [[#settings][Settings]]
+    - [[#package-management][Package Management]]
+  - [[#color-theme][Color Theme]]
+  - [[#initial-preferences][Initial Preferences]]
+    - [[#bind-dbrumleyorg-d-register][bind =dbrumley.org= =d= register]]
+    - [[#turn-off-splash-screen][Turn off splash screen]]
+    - [[#show-column-number-in-mode-line][Show column number in mode line]]
+    - [[#highlight-matching-parentheses][Highlight matching parentheses]]
+    - [[#turn-off-tabs][Turn off tabs]]
+    - [[#indicate-empty-lines][Indicate empty lines]]
+    - [[#turn-on-auto-fill-for-text-mode][Turn on auto-fill for text mode]]
+    - [[#turn-off-backup-files][Turn off backup files]]
+    - [[#change-yes-or-no-to-y-or-n][Change "yes or no" to "y or n"]]
+    - [[#turn-off-toolbar][Turn off toolbar]]
+    - [[#put-time-in-status-bar][Put time in status bar]]
+    - [[#delete-trailing-white-space][Delete trailing white space]]
+  - [[#packages][Packages]]
+    - [[#counsel][Counsel]]
+    - [[#swiper][Swiper]]
+    - [[#magit][Magit]]
+    - [[#projectile][Projectile]]
+    - [[#org][Org]]
+    - [[#toc-org][Toc-org]]
+    - [[#yaml-and-markdown][YAML and Markdown]]
+    - [[#company-mode][Company mode]]
+    - [[#discover-my-major-mode][Discover My Major Mode]]
+    - [[#define-word-at-point][Define Word at Point]]
+    - [[#ocaml][OCaml]]
+    - [[#latexdocview-setup][Latex/Docview setup]]
+    - [[#writegood][Writegood]]
+    - [[#web][Web]]
+    - [[#python][Python]]
+  - [[#os-configuration][OS configuration]]
+    - [[#os-x-behaviors][OS X behaviors]]
+    - [[#osx-copy-and-paste][OSX Copy and Paste]]
+    - [[#set-up-the-right-profile-information-and-shell][Set up the right profile information and shell]]
+    - [[#use-the-system-defined-web-browser][Use the system defined web browser]]
+    - [[#set-up-utf-8][Set up UTF-8]]
+    - [[#visible-bell-bug-workaround][Visible Bell Bug Workaround]]
+  - [[#post-initialization][Post Initialization]]
+  - [[#shortcuts-and-other-post-bindings][Shortcuts and Other Post Bindings]]
+    - [[#bind-goto-line][Bind goto-line]]
+    - [[#turn-on-flyspell-mode][Turn on flyspell mode]]
 
 ** About this file
-This is an Emacs literate configuration template. It contains the
+This is an Emacs literate configuration file. It contains the
 basic structure of a literate config along with some optimizations to
 ensure a fast load time.
 
@@ -201,6 +252,11 @@ which is very logical if you think about it.
 *** Turn off splash screen
 #+BEGIN_SRC emacs-lisp
 (setq inhibit-splash-screen t)
+#+END_SRC
+
+*** Show column number in mode line
+#+BEGIN_SRC emacs-lisp
+(setq column-number-mode t)
 #+END_SRC
 
 *** Highlight matching parentheses
