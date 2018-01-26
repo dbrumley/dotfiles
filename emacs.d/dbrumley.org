@@ -21,7 +21,7 @@
     - [[#package-management][Package Management]]
   - [[#color-theme][Color Theme]]
   - [[#initial-preferences][Initial Preferences]]
-    - [[#bind-dbrumleyorg-d-register][bind =dbrumley.org= =d= register]]
+    - [[#bind-d-and-t--registers-to-frequently-used-files][bind =d= and =t=  registers to frequently used files]]
     - [[#turn-off-splash-screen][Turn off splash screen]]
     - [[#show-column-number-in-mode-line][Show column number in mode line]]
     - [[#highlight-matching-parentheses][Highlight matching parentheses]]
@@ -231,7 +231,7 @@ previously compiled manually then all of the package initialization will still t
 #+END_SRC
 
 ** Initial Preferences
-*** bind =dbrumley.org= =d= register
+*** bind =d= and =t=  registers to frequently used files
 I bind a register key to =dbrumley.org= because I find myself editing
 it often.  I put this at the top because I want it available even if
 something else doesn't load.
@@ -246,7 +246,7 @@ which is very logical if you think about it.
 
 #+BEGIN_SRC emacs-lisp
   (set-register ?d (cons 'file "~/.emacs.d/dbrumley.org"))
-  (set-register ?t (cons 'file "~/Dropbox/org-mode/todo.org"))
+  (set-register ?t (cons 'file "~/Dropbox (Personal)/org/todo.org"))
 #+END_SRC
 
 *** Turn off splash screen

@@ -7,6 +7,7 @@
 ;;; Code:
 
 ;; Don't attempt to find/apply special file handlers to files loaded during startup.
+(package-initialize)
 (let ((file-name-handler-alist nil))
   ;; If config is pre-compiled, then load that
   (if (file-exists-p (expand-file-name "dbrumley.elc" user-emacs-directory))
