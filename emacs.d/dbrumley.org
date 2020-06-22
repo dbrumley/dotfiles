@@ -35,11 +35,11 @@
     - [[#delete-trailing-white-space][Delete trailing white space]]
   - [[#packages][Packages]]
     - [[#counsel][Counsel]]
+    - [[#docker][Docker]]
     - [[#swiper][Swiper]]
     - [[#magit][Magit]]
     - [[#projectile][Projectile]]
     - [[#org][Org]]
-    - [[#org-journal][Org-journal]]
     - [[#toc-org][Toc-org]]
     - [[#yaml-and-markdown][YAML and Markdown]]
     - [[#company-mode][Company mode]]
@@ -61,6 +61,7 @@
   - [[#shortcuts-and-other-post-bindings][Shortcuts and Other Post Bindings]]
     - [[#bind-goto-line][Bind goto-line]]
     - [[#turn-on-flyspell-mode][Turn on flyspell mode]]
+  - [[#other-packages][Other packages]]
 
 ** About this file
 This is an Emacs literate configuration file. It contains the
@@ -325,6 +326,12 @@ with richer versions. Let's install it!
   :demand t)
 #+END_SRC
 
+*** Docker
+#+BEGIN_SRC emacs-lisp
+(use-package docker-tramp)
+(use-package dockerfile-mode)
+#+END_SRC
+
 *** Swiper
 Swiper is an awesome searching utility with a quick preview. Let's install it and
 load it when =swiper= or =swiper-all= is called.
@@ -423,13 +430,6 @@ path, to ensure the version we want is prioritized instead.
         ("PENDING" . (:foreground "yellow" :weight bold))))
 #+END_SRC
 
-*** Org-journal
-#+BEGIN_SRC emacs-lisp
-(use-package org-journal
-  :after org
-  :config (setq org-journal-dir "/Users/dbrumley/Dropbox (Personal)/org-mode/journal")
-)
-#+END_SRC
 *** Toc-org
 Let's install and load the =toc-org= package after org mode is
 loaded. This is the package that automatically generates an up to date
@@ -1062,3 +1062,5 @@ anyway by default and control is easier for me to go to than escape.
   (dolist (hook '(text-mode-hook))
     (add-hook hook (lambda () (flyspell-mode 1))))
 #+END_SRC
+
+** Other packages
